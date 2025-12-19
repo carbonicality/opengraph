@@ -1,7 +1,7 @@
 const canvas = document.getElementById('gCanvas');
 const ctx = canvas.getContext('2d');
 
-let scale = 40;
+let scale = 100;
 let offsetX = 0;
 let offsetY = 0;
 
@@ -11,6 +11,36 @@ function resizeCanvas() {
     drawGraph();
 }
 
+function formatNum(num,step) {
+    if (step >= 1) {
+        return Math.round(num).toString();
+    } else if (step >= 0.1) {
+        return num.toFixed(1);
+    } else if (step >= 0.01) {
+        return num.toFixed(2);
+    } else {
+        return num.toFixed(3);
+    }
+}
+
+function getGridStep() {
+    const tSpacing = 100;
+    const rawStep = tSpacing / scale;
+    const mag = Math.pow(10,Math.floor(Math.log10(rawStep)));
+    const res = rawStep / mag;
+    let niceStep;
+    if (res <= 1.5) {
+        niceStep = 1* mag;
+    } else if (res <= 3) {
+        niceStep = 2 * mag;
+    } else if (res <= 7) {
+        niceStep = 5 * mag;
+    } else {
+        niceStep = 10 * mag;
+    }
+    return niceStep;
+}
+
 function drawGraph() {
     const width = canvas.width;
     const height = canvas.height;
@@ -18,22 +48,39 @@ function drawGraph() {
     ctx.fillRect(0,0,width,height);
     const centerX = width /2 + offsetX;
     const centerY = height /2 + offsetY;
-    ctx.strokeStyle = '#d0d0d0';
+    const gridStep = getGridStep();
+    const gridSize = scale * gridStep;
+    const sGridSize = gridSize / 5;
+    ctx.strokeStyle = '#f0f0f0';
     ctx.lineWidth = 1;
-    for (let x = centerX % scale;x < width; x += scale) {
+    for (let x= centerX % sGridSize; x <width; x += sGridSize) {
         ctx.beginPath();
         ctx.moveTo(x,0);
         ctx.lineTo(x,height);
         ctx.stroke();
     }
-    for (let y = centerY % scale; y < height;y += scale) {
+    for (let y = centerY % sGridSize; y < height; y += sGridSize) {
         ctx.beginPath();
         ctx.moveTo(0,y);
         ctx.lineTo(width,y);
         ctx.stroke();
     }
-    ctx.strokeStyle ='#bbb';
-    ctx.lineWidth=1.5;
+    ctx.strokeStyle = '#d5d5d5';
+    ctx.lineWidth = 1.2;
+    for (let x = centerX % gridSize; x < width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x,0);
+        ctx.lineTo(x,height);
+        ctx.stroke();
+    }
+    for (let y = centerY % gridSize; y <height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0,y);
+        ctx.lineTo(width,y);
+        ctx.stroke();
+    }
+    ctx.strokeStyle ='#888';
+    ctx.lineWidth=2;
     //yaxis
     ctx.beginPath();
     ctx.moveTo(centerX,0);
@@ -44,24 +91,26 @@ function drawGraph() {
     ctx.moveTo(0,centerY);
     ctx.lineTo(width,centerY);
     ctx.stroke();
-    ctx.fillStyle = '#888';
-    ctx.font = '11px Ubuntu';
+    ctx.fillStyle = '#666';
+    ctx.font = '13px Ubuntu';
     //xlabels 
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    for (let x=centerX % scale; x<width; x += scale) {
-        const unit = Math.round((x-centerX)/scale);
-        if (unit !== 0 && Math.abs(unit) % 1 === 0) {
-            ctx.fillText(unit.toString(),x,centerY + 6);
+    for (let x= centerX % gridSize; x < width; x += gridSize) {
+        const unit = (x - centerX) /scale;
+        if (Math.abs(unit) > 0.0001) {
+            const label = formatNum(unit,gridStep);
+            ctx.fillText(label,x,centerY+6);
         }
     }
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     //ylabels
-    for (let y = centerY % scale; y<height; y+= scale) {
-        const unit = Math.round((centerY -y) / scale);
-        if (unit !== 0 && Math.abs(unit) % 1 === 0) {
-            ctx.fillText(unit.toString(),centerX - 8,y);
+    for (let y = centerY % gridSize; y < height; y += gridSize) {
+        const unit = (centerY - y)/scale;
+        if (Math.abs(unit) > 0.0001) {
+            const label = formatNum(unit,gridStep);
+            ctx.fillText(label,centerX - 8, y);
         }
     }
     ctx.textAlign = 'center';
