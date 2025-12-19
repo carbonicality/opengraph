@@ -242,3 +242,27 @@ canvas {
 ::-webkit-scrollbar-thumb:hover {
     background: #b0b0b0;
 }
+
+.exp-item:last-child {
+    position: relative;
+    border-bottom: none;
+}
+
+.exp-item:last-child::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.9) 90%);
+    pointer-events: none;
+}
+
+.exp-item:last-child.active::after {
+    display: none;
+}
+
+.exp-item:last-child .exp-input::placeholder {
+    color: transparent;
+}
