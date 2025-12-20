@@ -1,3 +1,5 @@
+@import url("https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font/chtml/woff2");
+
 * {
     margin:0;
     padding:0;
@@ -280,4 +282,87 @@ canvas {
     transform: translateY(-50%);
     pointer-events: none;
     color: #333;
+    font-family: 'mathjax-newcm';
+}
+
+/* keyboard */
+.math-kb {
+    border-top: 1px solid #d5d5d5;
+    background: #f0f0f0;
+    padding: 8px;
+}
+
+.kb-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.kb-row:last-child {
+    margin-bottom: 0;
+}
+
+.kb-btn {
+    flex: 1;
+    height: 40px;
+    border: 1px solid #ccc;
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    transition: all 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    font-family: 'mathjax-newcm' !important;
+}
+
+.kb-btn:hover {
+    background: #f5f5f5;
+    border-color: #999;
+}
+
+.kb-btn:active {
+    background: #e5e5e5;
+    transform: translateY(1px);
+}
+
+.kb-wide {
+    flex: 1.5;
+}
+
+.kb-enter {
+    flex: 2;
+    background: #2d70b3;
+    color: #fff;
+    border-color: #2d70b3;
+}
+
+.kb-enter:hover {
+    background: #1f5a93;
+}
+
+.kb-special {
+    font-size: 12px;
+    flex: 2;
+}
+
+.kb-bksp {
+    font-size: 20px;
+}
+
+.kb-num {
+    background: #e8e8e8;
+}
+
+.kb-num:hover {
+    background: #d8d8d8;
+}
+
+.kb-btn .material-symbols-outlined {
+    font-size: 18px;
+    font-style: normal;
 }

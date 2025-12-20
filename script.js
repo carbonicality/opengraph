@@ -257,18 +257,63 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
     });
 });
 
-// mathjax stuff
 function renderMath(input,renderDiv) {
     const text = input.value.trim();
     if (!text) {
         renderDiv.innerHTML = '';
         return;
     }
-    renderDiv.innerHTML = `\\(${text}\\)`;
-    MathJax.typesetPromise([renderDiv]).catch((err) => {
-        renderDiv.textContent = text;
-    });
+    let procText = text
+        .replace(/\^$/g, '^{\\square}')
+        .replace(/\^([^{])/g, '^{$1}')
+        .replace(/_$/g, '_{\\square}')
+        .replace(/_([^{])/g, '_{$1}'); // used AI for some help here
+    renderDiv.innerHTML = `\\(${procText}\\)`;
+    if (window.MathJax && MathJax.typesetPromise) {
+        MathJax.typesetPromise([renderDiv]).catch((err) => {
+            renderDiv.textContent = text;
+        });
+    }
 }
+
+document.querySelector('.math-kb').addEventListener('click',(e) => {
+    const btn = e.target.closest('.kb-btn');
+    if (!btn) return;
+    const activeItem = document.querySelector('.exp-item.active');
+    if (!activeItem) return;
+    const input = activeItem.querySelector('.exp-input');
+    const renderDiv = activeItem.querySelector('.exp-render');
+    if (btn.classList.contains('kb-bksp')) {
+        const pos = input.selectionStart;
+        if (pos > 0) {
+            input.value = input.value.slice(0,pos - 1) + input.value.slice(pos);
+            input.setSelectionRange(pos - 1,pos - 1);
+        }
+    } else if (btn.classList.contains('kb-enter')) {
+        const expContainer = document.getElementById('exp');
+        const allItems = Array.from(expContainer.children);
+        const currIdx = allItems.indexOf(activeItem);
+        if (currIdx < allItems.length -1) {
+            allItems[currIdx + 1].click();
+        } else {
+            activeItem.click();
+        }
+        return;
+    } else {
+        const toInsert = btn.dataset.insert;
+        const cursorBack = parseInt(btn.dataset.cursorBack || '0');
+        if (toInsert) {
+            const pos = input.selectionStart;
+            const before = input.value.slice(0,pos);
+            const after = input.value.slice(pos);
+            input.value = before + toInsert + after;
+            const newPos = pos +toInsert.length - cursorBack;
+            input.setSelectionRange(newPos,newPos);
+        }
+    }
+    input.focus();
+    renderMath(input,renderDiv);
+});
 
 document.getElementById('exp').addEventListener('input',(e) => {
     if (e.target.classList.contains('exp-input')) {
