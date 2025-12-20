@@ -194,6 +194,7 @@ document.getElementById('exp').addEventListener('click', (e) => {
         </div>
         <div class="exp-content">
             <input type="text" class="exp-input" placeholder="Type an equation...">
+            <div class="exp-render"></div>
         </div>
         <button class="delete-btn">
             <span class="material-symbols-outlined">close</span>
@@ -246,6 +247,7 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
             </div>
             <div class="exp-content">
                 <input type="text" class="exp-input" placeholder="Type an equation...">
+                <div class="exp-render"></div>
             </div>
             <button class="delete-btn">
                 <span class="material-symbols-outlined">close</span>
@@ -253,4 +255,33 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
             expContainer.appendChild(newItem);
         }
     });
+});
+
+// mathjax stuff
+function renderMath(input,renderDiv) {
+    const text = input.value.trim();
+    if (!text) {
+        renderDiv.innerHTML = '';
+        return;
+    }
+    renderDiv.innerHTML = `\\(${text}\\)`;
+    MathJax.typesetPromise([renderDiv]).catch((err) => {
+        renderDiv.textContent = text;
+    });
+}
+
+document.getElementById('exp').addEventListener('input',(e) => {
+    if (e.target.classList.contains('exp-input')) {
+        const item = e.target.closest('.exp-item');
+        const renderDiv = item.querySelector('.exp-render');
+        renderMath(e.target,renderDiv);
+    }
+});
+
+document.querySelectorAll('.exp-item').forEach(item => {
+    const input = item.querySelector('.exp-input');
+    const renderDiv = item.querySelector('.exp-render');
+    if (input.value) {
+        renderMath(input,renderDiv);
+    }
 });

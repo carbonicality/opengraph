@@ -133,6 +133,7 @@ body {
     align-items: center;
     padding: 14px 40px 14px 12px;
     min-width: 0;
+    position: relative;
 }
 
 .exp-input {
@@ -141,9 +142,10 @@ body {
     background: transparent;
     font-size: 16px;
     outline: none;
-    color: #333;
+    color: transparent;
     font-weight: 400;
     padding: 2px 0;
+    caret-color: #333;
 }
 
 .exp-input::placeholder {
@@ -269,4 +271,13 @@ canvas {
 
 .exp-item:last-child .delete-btn {
     display: none !important;
+}
+
+.exp-render {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #333;
 }
