@@ -266,3 +266,7 @@ canvas {
 .exp-item:last-child .exp-input::placeholder {
     color: transparent;
 }
+
+.exp-item:last-child .delete-btn {
+    display: none !important;
+}

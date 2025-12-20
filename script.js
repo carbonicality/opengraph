@@ -175,3 +175,55 @@ canvas.addEventListener('wheel',(e) => {
 
 resizeCanvas();
 window.addEventListener('resize',resizeCanvas);
+
+// handle additions via the faded exp
+document.getElementById('exp').addEventListener('click', (e) => {
+    const clItem = e.target.closest('.exp-item');
+    if (!clItem) return;
+    if (clItem === clItem.parentElement.lastElementChild) {
+        document.querySelectorAll('.exp-item').forEach(i => i.classList.remove('active'));
+        clItem.classList.add('active');
+        clItem.querySelector('.exp-input').focus();
+        const expContainer = document.getElementById('exp');
+        const newItem = document.createElement('div');
+        newItem.className = 'exp-item';
+        const nextNum = expContainer.children.length + 1;
+        newItem.innerHTML = `
+        <div class="exp-left">
+            <span class="exp-num">${nextNum}</span>
+        </div>
+        <div class="exp-content">
+            <input type="text" class="exp-input" placeholder="Type an equation...">
+        </div>
+        <button class="delete-btn">
+            <span class="material-symbols-outlined">close</span>
+        </button>`;
+        expContainer.appendChild(newItem);
+    } else {
+        document.querySelectorAll('.exp-item').forEach(i => i.classList.remove('active'));
+        clItem.classList.add('active');
+        clItem.querySelector('.exp-input').focus();
+    }
+});
+
+// handle deletions
+document.getElementById('exp').addEventListener('click',(e) => {
+    const deleteBtn = e.target.closest('.delete-btn');
+    if (deleteBtn) {
+        e.stopPropagation();
+        const item = deleteBtn.closest('.exp-item');
+        const expContainer = document.getElementById('exp');
+        if (item === expContainer.lastElementChild) {
+            return;
+        }
+        const wasActive = item.classList.contains('active');
+        item.remove();
+        Array.from(expContainer.children).forEach((expItem,idx) => {
+            expItem.querySelector('.exp-num').textContent = idx + 1;
+        });
+        if (wasActive && expContainer.children.length > 0) {
+            expContainer.firstElementChild.classList.add('active');
+            expContainer.firstElementChild.querySelector('.exp-input').focus();
+        }
+    }
+});
