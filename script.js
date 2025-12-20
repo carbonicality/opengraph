@@ -227,3 +227,30 @@ document.getElementById('exp').addEventListener('click',(e) => {
         }
     }
 });
+
+//toolbar btn handling
+document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
+    btn.addEventListener('click',() => {
+        if (idx === 0) {
+            const expContainer = document.getElementById('exp');
+            const lastItem = expContainer.lastElementChild;
+            document.querySelectorAll('.exp-item').forEach(i => i.classList.remove('active'));
+            lastItem.classList.add('active');
+            lastItem.querySelector('.exp-input').focus();
+            const newItem = document.createElement('div');
+            newItem.className= 'exp-item';
+            const nextNum = expContainer.children.length + 1;
+            newItem.innerHTML = `
+            <div class="exp-left">
+                <span class="exp-num">${nextNum}</span>
+            </div>
+            <div class="exp-content">
+                <input type="text" class="exp-input" placeholder="Type an equation...">
+            </div>
+            <button class="delete-btn">
+                <span class="material-symbols-outlined">close</span>
+            </button>`;
+            expContainer.appendChild(newItem);
+        }
+    });
+});
