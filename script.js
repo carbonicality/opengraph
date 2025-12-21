@@ -263,20 +263,27 @@ function renderMath(input,renderDiv) {
         renderDiv.innerHTML = '';
         return;
     }
+    const pos = input.selectionStart;
+    const beforeCurs = text.slice(0,pos);
+    const LCP = beforeCurs.lastIndexOf('^');
+    const afterLastC = beforeCurs.slice(LCP + 1);
+    if (LCP !== -1 && afterLastC.length <= 3 && !afterLastC.includes(' ') && !afterLastC.includes('}')) {
+        input.classList.add('in-spr');
+    } else {
+        input.classList.remove('in-spr');
+    }
     let procText = text
-        .replace(/\^$/g, '^{\\square}')
-        .replace(/\^([^{])/g, '^{$1}')
-        .replace(/_$/g, '_{\\square}')
-        .replace(/_([^{])/g, '_{$1}'); // used AI for some help here
+        .replace(/\^([^{}\s])/g, '^{$1}')
+        .replace(/_([^{}\s])/g, '_{$1}');
     renderDiv.innerHTML = `\\(${procText}\\)`;
     if (window.MathJax && MathJax.typesetPromise) {
         MathJax.typesetPromise([renderDiv]).catch((err) => {
-            renderDiv.textContent = text;
+            renderDiv.textContent= text;
         });
     }
 }
 
-document.querySelector('.math-kb').addEventListener('click',(e) => {
+document.querySelector('.math-kb').addEventListener('click', (e) => {
     const btn = e.target.closest('.kb-btn');
     if (!btn) return;
     const activeItem = document.querySelector('.exp-item.active');
@@ -286,8 +293,8 @@ document.querySelector('.math-kb').addEventListener('click',(e) => {
     if (btn.classList.contains('kb-bksp')) {
         const pos = input.selectionStart;
         if (pos > 0) {
-            input.value = input.value.slice(0,pos - 1) + input.value.slice(pos);
-            input.setSelectionRange(pos - 1,pos - 1);
+            input.value = input.value.slice(0,pos-1) + input.value.slice(pos);
+            input.setSelectionRange(pos-1,pos-1);
         }
     } else if (btn.classList.contains('kb-enter')) {
         const expContainer = document.getElementById('exp');
@@ -301,14 +308,23 @@ document.querySelector('.math-kb').addEventListener('click',(e) => {
         return;
     } else {
         const toInsert = btn.dataset.insert;
-        const cursorBack = parseInt(btn.dataset.cursorBack || '0');
-        if (toInsert) {
-            const pos = input.selectionStart;
-            const before = input.value.slice(0,pos);
-            const after = input.value.slice(pos);
+        const pos = input.selectionStart;
+        const before = input.value.slice(0,pos);
+        const after = input.value.slice(pos);
+        if (toInsert === '^{}') {
+            input.value = before + '^2' + after;
+            input.setSelectionRange(pos+2,pos+2);
+        } else if (toInsert === '_{}') {
+            if (before.trim().length > 0) {
+                input.value = before + '^' + after;
+                input.setSelectionRange(pos + 1,pos+1);
+            }
+        } else if (toInsert === '\\sqrt{}') {
+            input.value = before + '\\sqrt{}' + after;
+            input.setSelectionRange(pos + 6,pos + 6);
+        } else if (toInsert) {
             input.value = before + toInsert + after;
-            const newPos = pos +toInsert.length - cursorBack;
-            input.setSelectionRange(newPos,newPos);
+            input.setSelectionRange(pos+toInsert.length,pos+toInsert.length);
         }
     }
     input.focus();

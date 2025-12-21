@@ -142,12 +142,14 @@ body {
     width: 100%;
     border: none;
     background: transparent;
-    font-size: 16px;
+    font-size: 18px;
     outline: none;
     color: transparent;
     font-weight: 400;
     padding: 2px 0;
+    font-family: 'mathjax-newcm',serif;
     caret-color: #333;
+    letter-spacing: 0.5px;
 }
 
 .exp-input::placeholder {
@@ -282,6 +284,7 @@ canvas {
     transform: translateY(-50%);
     pointer-events: none;
     color: #333;
+    font-size: 18px;
     font-family: 'mathjax-newcm';
 }
 
@@ -365,4 +368,14 @@ canvas {
 .kb-btn .material-symbols-outlined {
     font-size: 18px;
     font-style: normal;
+}
+
+.exp-input.in-spr {
+    transform: translateY(-8px);
+    font-size: 14px;
+    transition: transform 0.1s, font-size 0.1s;
+}
+
+.exp-input {
+    transition: transform 0.1s, font-size 0.1s;
 }
