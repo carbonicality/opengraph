@@ -7,18 +7,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
         <link rel="stylesheet" href="./styles.css">
-        <script>
-            window.MathJax = {
-                tex: {
-                    inlineMath: [['$', '$'], ['\\(', '\\)']],
-                    displayMath: [['$$', '$$'], ['\\[', '\\]']]
-                },
-                svg: {
-                    fontCache: 'global'
-                }
-            };
-        </script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+        <script src="https://unpkg.com/mathlive"></script>
     <body>
         <div class="sidebar">
             <div class="toolbar">
@@ -39,8 +28,7 @@
                         <span class="exp-num">1</span>
                     </div>
                     <div class="exp-content">
-                        <input type="text" class="exp-input" placeholder="Type an equation...">
-                        <div class="exp-render"></div>
+                        <math-field></math-field>
                     </div>
                     <button class="delete-btn">
                         <span class="material-symbols-outlined">close</span>
@@ -51,8 +39,7 @@
                         <span class="exp-num">2</span>
                     </div>
                     <div class="exp-content">
-                        <input type="text" class="exp-input" placeholder="Type an equation...">
-                        <div class="exp-render"></div>
+                        <math-field></math-field>
                     </div>
                     <button class="delete-btn">
                         <span class="material-symbols-outlined">close</span>

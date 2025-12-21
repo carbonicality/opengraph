@@ -133,27 +133,9 @@ body {
     flex: 1;
     display: flex;
     align-items: center;
-    padding: 14px 40px 14px 12px;
+    padding: 8px 40px 8px 12px;
     min-width: 0;
     position: relative;
-}
-
-.exp-input {
-    width: 100%;
-    border: none;
-    background: transparent;
-    font-size: 18px;
-    outline: none;
-    color: transparent;
-    font-weight: 400;
-    padding: 2px 0;
-    font-family: 'mathjax-newcm',serif;
-    caret-color: #333;
-    letter-spacing: 0.5px;
-}
-
-.exp-input::placeholder {
-    color: #ccc;
 }
 
 .delete-btn {
@@ -269,23 +251,8 @@ canvas {
     display: none;
 }
 
-.exp-item:last-child .exp-input::placeholder {
-    color: transparent;
-}
-
 .exp-item:last-child .delete-btn {
     display: none !important;
-}
-
-.exp-render {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-    color: #333;
-    font-size: 18px;
-    font-family: 'mathjax-newcm';
 }
 
 /* keyboard */
@@ -370,12 +337,53 @@ canvas {
     font-style: normal;
 }
 
-.exp-input.in-spr {
-    transform: translateY(-8px);
-    font-size: 14px;
-    transition: transform 0.1s, font-size 0.1s;
+math-field {
+    width: 100%;
+    border: none;
+    background: transparent !important;
+    font-size:18px;
+    outline:none;
+    padding: 0 !important;
+    margin: 0;
+    min-height: auto;
+    display: block;
+    --hue: 211;
+    --contains-highlight-background-color: transparent;
+    --smart-fence-color: transparent;
 }
 
-.exp-input {
-    transition: transform 0.1s, font-size 0.1s;
+math-field::part(container) {
+    padding: 0 !important;
+    margin: 0;
+    border: none;
+    background: transparent;
+}
+
+math-field::part(content) {
+    padding: 0 !important;
+    margin: 0;
+}
+
+math-field .ML__fieldcontainer {
+    padding: 0 !important;
+}
+
+math-field::part(virtual-keyboard-toggle) {
+    display: none !important;
+}
+
+.exp-item.active math-field::part(virtual-keyboard-toggle) {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+math-field::part(menu-toggle) {
+    display: none !important;
+}
+
+.exp-item.active math-field::part(menu-toggle) {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }

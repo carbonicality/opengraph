@@ -176,14 +176,18 @@ canvas.addEventListener('wheel',(e) => {
 resizeCanvas();
 window.addEventListener('resize',resizeCanvas);
 
-// handle additions via the faded exp
-document.getElementById('exp').addEventListener('click', (e) => {
+//handle selections and additions via faded exp and exp left
+document.getElementById('exp').addEventListener('click',(e) => {
+    const expLeft = e.target.closest('.exp-left');
+    if (!expLeft) return;
     const clItem = e.target.closest('.exp-item');
     if (!clItem) return;
     if (clItem === clItem.parentElement.lastElementChild) {
         document.querySelectorAll('.exp-item').forEach(i => i.classList.remove('active'));
         clItem.classList.add('active');
-        clItem.querySelector('.exp-input').focus();
+        setTimeout(() => {
+            clItem.querySelector('math-field').focus();
+        },0);
         const expContainer = document.getElementById('exp');
         const newItem = document.createElement('div');
         newItem.className = 'exp-item';
@@ -193,8 +197,7 @@ document.getElementById('exp').addEventListener('click', (e) => {
             <span class="exp-num">${nextNum}</span>
         </div>
         <div class="exp-content">
-            <input type="text" class="exp-input" placeholder="Type an equation...">
-            <div class="exp-render"></div>
+            <math-field></math-field>
         </div>
         <button class="delete-btn">
             <span class="material-symbols-outlined">close</span>
@@ -203,7 +206,9 @@ document.getElementById('exp').addEventListener('click', (e) => {
     } else {
         document.querySelectorAll('.exp-item').forEach(i => i.classList.remove('active'));
         clItem.classList.add('active');
-        clItem.querySelector('.exp-input').focus();
+        setTimeout(() => {
+            clItem.querySelector('math-field').focus();
+        },0);
     }
 });
 
@@ -224,7 +229,7 @@ document.getElementById('exp').addEventListener('click',(e) => {
         });
         if (wasActive && expContainer.children.length > 0) {
             expContainer.firstElementChild.classList.add('active');
-            expContainer.firstElementChild.querySelector('.exp-input').focus();
+            expContainer.firstElementChild.querySelector('math-field').focus();
         }
     }
 });
@@ -237,7 +242,7 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
             const lastItem = expContainer.lastElementChild;
             document.querySelectorAll('.exp-item').forEach(i => i.classList.remove('active'));
             lastItem.classList.add('active');
-            lastItem.querySelector('.exp-input').focus();
+            lastItem.querySelector('math-field').focus();
             const newItem = document.createElement('div');
             newItem.className= 'exp-item';
             const nextNum = expContainer.children.length + 1;
@@ -246,8 +251,7 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
                 <span class="exp-num">${nextNum}</span>
             </div>
             <div class="exp-content">
-                <input type="text" class="exp-input" placeholder="Type an equation...">
-                <div class="exp-render"></div>
+                <math-field></math-field>
             </div>
             <button class="delete-btn">
                 <span class="material-symbols-outlined">close</span>
@@ -257,92 +261,38 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
     });
 });
 
-function renderMath(input,renderDiv) {
-    const text = input.value.trim();
-    if (!text) {
-        renderDiv.innerHTML = '';
-        return;
-    }
-    const pos = input.selectionStart;
-    const beforeCurs = text.slice(0,pos);
-    const LCP = beforeCurs.lastIndexOf('^');
-    const afterLastC = beforeCurs.slice(LCP + 1);
-    if (LCP !== -1 && afterLastC.length <= 3 && !afterLastC.includes(' ') && !afterLastC.includes('}')) {
-        input.classList.add('in-spr');
-    } else {
-        input.classList.remove('in-spr');
-    }
-    let procText = text
-        .replace(/\^([^{}\s])/g, '^{$1}')
-        .replace(/_([^{}\s])/g, '_{$1}');
-    renderDiv.innerHTML = `\\(${procText}\\)`;
-    if (window.MathJax && MathJax.typesetPromise) {
-        MathJax.typesetPromise([renderDiv]).catch((err) => {
-            renderDiv.textContent= text;
-        });
-    }
-}
-
 document.querySelector('.math-kb').addEventListener('click', (e) => {
     const btn = e.target.closest('.kb-btn');
     if (!btn) return;
     const activeItem = document.querySelector('.exp-item.active');
     if (!activeItem) return;
-    const input = activeItem.querySelector('.exp-input');
-    const renderDiv = activeItem.querySelector('.exp-render');
+    const mathField = activeItem.querySelector('math-field');
+    if (!mathField) return;
     if (btn.classList.contains('kb-bksp')) {
-        const pos = input.selectionStart;
-        if (pos > 0) {
-            input.value = input.value.slice(0,pos-1) + input.value.slice(pos);
-            input.setSelectionRange(pos-1,pos-1);
-        }
+        mathField.executeCommand('deleteBackward');
     } else if (btn.classList.contains('kb-enter')) {
         const expContainer = document.getElementById('exp');
         const allItems = Array.from(expContainer.children);
         const currIdx = allItems.indexOf(activeItem);
-        if (currIdx < allItems.length -1) {
+        if (currIdx < allItems.length - 1) {
             allItems[currIdx + 1].click();
         } else {
             activeItem.click();
         }
-        return;
     } else {
         const toInsert = btn.dataset.insert;
-        const pos = input.selectionStart;
-        const before = input.value.slice(0,pos);
-        const after = input.value.slice(pos);
-        if (toInsert === '^{}') {
-            input.value = before + '^2' + after;
-            input.setSelectionRange(pos+2,pos+2);
-        } else if (toInsert === '_{}') {
-            if (before.trim().length > 0) {
-                input.value = before + '^' + after;
-                input.setSelectionRange(pos + 1,pos+1);
+        if (toInsert) {
+            if (toInsert === '^{}') {
+                mathField.executeCommand(['insert','^']);
+                mathField.executeCommand(['insert', '2']);
+            } else if (toInsert === '_{}') {
+                mathField.executeCommand(['insert','^']);
+            } else if (toInsert === '\\sqrt{}') {
+                mathField.executeCommand(['insert', '\\sqrt']);
+            } else {
+                mathField.executeCommand(['insert', toInsert]);
             }
-        } else if (toInsert === '\\sqrt{}') {
-            input.value = before + '\\sqrt{}' + after;
-            input.setSelectionRange(pos + 6,pos + 6);
-        } else if (toInsert) {
-            input.value = before + toInsert + after;
-            input.setSelectionRange(pos+toInsert.length,pos+toInsert.length);
         }
     }
-    input.focus();
-    renderMath(input,renderDiv);
-});
-
-document.getElementById('exp').addEventListener('input',(e) => {
-    if (e.target.classList.contains('exp-input')) {
-        const item = e.target.closest('.exp-item');
-        const renderDiv = item.querySelector('.exp-render');
-        renderMath(e.target,renderDiv);
-    }
-});
-
-document.querySelectorAll('.exp-item').forEach(item => {
-    const input = item.querySelector('.exp-input');
-    const renderDiv = item.querySelector('.exp-render');
-    if (input.value) {
-        renderMath(input,renderDiv);
-    }
+    mathField.focus();
 });
