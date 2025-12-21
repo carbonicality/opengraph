@@ -255,88 +255,6 @@ canvas {
     display: none !important;
 }
 
-/* keyboard */
-.math-kb {
-    border-top: 1px solid #d5d5d5;
-    background: #f0f0f0;
-    padding: 8px;
-}
-
-.kb-row {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 4px;
-}
-
-.kb-row:last-child {
-    margin-bottom: 0;
-}
-
-.kb-btn {
-    flex: 1;
-    height: 40px;
-    border: 1px solid #ccc;
-    background: #fff;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
-    color: #333;
-    transition: all 0.1s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    font-family: 'mathjax-newcm' !important;
-}
-
-.kb-btn:hover {
-    background: #f5f5f5;
-    border-color: #999;
-}
-
-.kb-btn:active {
-    background: #e5e5e5;
-    transform: translateY(1px);
-}
-
-.kb-wide {
-    flex: 1.5;
-}
-
-.kb-enter {
-    flex: 2;
-    background: #2d70b3;
-    color: #fff;
-    border-color: #2d70b3;
-}
-
-.kb-enter:hover {
-    background: #1f5a93;
-}
-
-.kb-special {
-    font-size: 12px;
-    flex: 2;
-}
-
-.kb-bksp {
-    font-size: 20px;
-}
-
-.kb-num {
-    background: #e8e8e8;
-}
-
-.kb-num:hover {
-    background: #d8d8d8;
-}
-
-.kb-btn .material-symbols-outlined {
-    font-size: 18px;
-    font-style: normal;
-}
-
 math-field {
     width: 100%;
     border: none;
@@ -385,5 +303,189 @@ math-field::part(menu-toggle) {
 .exp-item.active math-field::part(menu-toggle) {
     display: flex !important;
     opacity: 1 !important;
-    visibility: visible !important;
+    visibility: visible;
+}
+
+/* custom mathlive keyboard styling*/
+/* i used some AI here too */
+
+.ML__keyboard {
+    position: fixed;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index:1000 !important;
+}
+
+.ML__keyboard .MLK__backdrop {
+    background: transparent !important;
+}
+
+.ML__keyboard .MLK__toolbar{
+    background: #f0f0f0 !important;
+    color: #333 !important;
+    border: none !important;
+    border-bottom: none !important;
+}
+
+.ML__keyboard .MLK__rows {
+    background: #f0f0f0 !important;
+}
+
+.ML__keyboard .MLK__row {
+    gap: 4px !important;
+    margin-bottom: 4px !important;
+    background: transparent !important;
+}
+
+.ML__keyboard .MLK__keycap {
+    height: 40px !important;
+    border: 1px solid #ccc !important;
+    background: #fff !important;
+    border-radius: 4px !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    color: #333 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+}
+
+.ML__keyboard .MLK__keycap:hover {
+    background: #f5f5f5 !important;
+    border-color: #999 !important;
+}
+
+.ML__keyboard .MLK_keycap:active {
+    background: #e5e5e5 !important;
+    transform: translateY(1px) !important;
+}
+
+.ML__keyboard .MLK__keycap.action,
+.ML__keyboard .MLK_keycap.shift,
+.ML__keyboard .MLK__keycap.fnbutton,
+.ML__keyboard .action,
+.ML__keyboard .shift {
+    background: #fff !important;
+    color: #333 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+    border: 1px solid #ccc !important;
+}
+
+.ML__keyboard .MLK__keycap.action:hover,
+.ML__keyboard .MLK__keycap.shift:hover,
+.ML__keyboard .MLK__keycap.fnbutton:hover,
+.ML__keyboard .action:hover,
+.ML__keyboard .shift:hover {
+    background: #f5f5f5 !important;
+    border-color: #999 !important;
+}
+
+.ML__keyboard .MLK__layer-switch,
+.ML__keyboard [data-layer] {
+    background: transparent !important;
+    color: #333 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 8px 12px !important;
+}
+
+.ML__keyboard .MLK__layer-switch:hover,
+.ML__keyboard [data-layer]:hover {
+    background: transparent !important;
+    border: none !important;
+}
+
+.ML__keyboard .MLK__layer-switch.is-active,
+.ML__keyboard [data-layer].is-active {
+    border-bottom: 2px solid #2d70b3 !important;
+    background: transparent !important;
+}
+
+.ML__keyboard .MLK__layer-switch.is-active:hover,
+.ML__keyboard [data-layer].is-active:hover {
+    background: transparent !important;
+}
+
+.ML__keyboard .MLK__keyboard-switcher {
+    background: #fff !important;
+    color: #333 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+    border: 1px solid #ccc !important;
+}
+
+.ML__keyboard .MLK__keyboard-switcher:hover {
+    background: #f5f5f5 !important;
+    border-color: #999 !important;
+}
+
+.MLK__variants,
+.MLK__alternatives,
+.MLK__menu,
+.MLK__plate,
+div[class*="variant"],
+div[class*="alternative"],
+div[class*="menu"],
+[class*="MLK__variants"],
+[class*="MLK__alternatives"],
+.ML__keyboard div[class*="variant"],
+.ML__keyboard div[class*="alternative"] {
+    background: #f0f0f0 !important;
+    background-color: #f0f0f0 !important;
+    border: 1px solid #ccc !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+
+.MLK__variants .MLK__keycap,
+.MLK__alternatives .MLK__keycap,
+.MLK__menu .MLK__keycap,
+.MLK__plate .MLK__keycap,
+div[class*="variant"] .MLK__keycap,
+div[class*="alternative"] .MLK__keycap,
+[class*="MLK__variants"] .MLK__keycap,
+[class*="MLK__alternatives"] .MLK__keycap {
+    background: #fff !important;
+    background-color: #fff !important;
+    color: #333 !important;
+    border: 1px solid #ccc !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+}
+
+.MLK__variants .MLK__keycap:hover,
+.MLK__alternatives .MLK__keycap:hover,
+.MLK__menu .MLK__keycap:hover,
+.MLK__plate .MLK__keycap:hover {
+    background: #f5f5f5 !important;
+    border-color: #999 !important;
+}
+
+.ML__keyboard *,
+.MLK__variants *,
+.MLK__alternatives * {
+    color: #333 !important;
+}
+
+.ML__keyboard svg,
+.MLK__variants svg,
+.MLK__alternatives svg {
+    fill: #333 !important;
+    stroke: #333 !important;
+}
+
+.ML__keyboard .MLK__keycap.is-active,
+.ML__keyboard .MLK__keycap.is-pressed,
+.ML__keyboard .shift.is-active {
+    background: #2d70b3 !important;
+    color: #fff !important;
+    border-color: #2d70b3 !important;
+}
+
+.ML__keyboard .MLK__keycap.is-active svg,
+.ML__keyboard .MLK__keycap.is-pressed svg,
+.ML__keyboard .shift.is-active svg,
+.ML__keyboard .MLK__keycap.is-active *,
+.ML__keyboard .MLK__keycap.is-pressed *,
+.ML__keyboard .shift.is-active * {
+    fill: #fff !important;
+    stroke: #fff !important;
+    color: #fff !important;
 }
