@@ -23,6 +23,29 @@ function formatNum(num,step) {
     }
 }
 
+function sflListeners() {
+    document.querySelectorAll('math-field').forEach(mf => {
+        mf.removeEventListener('focus',handleMFF);
+        mf.addEventListener('focus',handleMFF);
+    });
+}
+
+function handleMFF(e) {
+    const item = e.target.closest('.exp-item');
+    const expContainer = document.getElementById('exp');
+    if (item === expContainer.lastElementChild) {
+        e.preventDefault();
+        e.target.blur();
+        return;
+    }
+    if (item) {
+        document.querySelectorAll('.exp-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+    }
+}
+
+sflListeners();
+
 function getGridStep() {
     const tSpacing = 100;
     const rawStep = tSpacing / scale;
@@ -177,19 +200,13 @@ resizeCanvas();
 window.addEventListener('resize',resizeCanvas);
 
 //handle selections and additions via faded exp and exp left
-document.getElementById('exp').addEventListener('click',(e) => {
-    const expLeft = e.target.closest('.exp-left');
-    if (!expLeft) return;
+document.getElementById('exp').addEventListener('click', (e) => {
+    if (e.target.closest('.delete-btn')) return;
     const clItem = e.target.closest('.exp-item');
     if (!clItem) return;
-    if (clItem === clItem.parentElement.lastElementChild) {
-        document.querySelectorAll('.exp-item').forEach(i => i.classList.remove('active'));
-        clItem.classList.add('active');
-        setTimeout(() => {
-            clItem.querySelector('math-field').focus();
-        },0);
-        const expContainer = document.getElementById('exp');
-        const newItem = document.createElement('div');
+    const expContainer = document.getElementById('exp');
+    if (clItem === expContainer.lastElementChild) {
+        const newItem =document.createElement('div');
         newItem.className = 'exp-item';
         const nextNum = expContainer.children.length + 1;
         newItem.innerHTML = `
@@ -203,12 +220,20 @@ document.getElementById('exp').addEventListener('click',(e) => {
             <span class="material-symbols-outlined">close</span>
         </button>`;
         expContainer.appendChild(newItem);
+        sflListeners();
+        document.querySelectorAll('.exp-item').forEach(i => i.classList.remove('active'));
+        clItem.classList.add('active');
+        const mathField = clItem.querySelector('math-field');
+        if (mathField) {
+            setTimeout(() => mathField.focus(),0);
+        }
     } else {
         document.querySelectorAll('.exp-item').forEach(i => i.classList.remove('active'));
         clItem.classList.add('active');
-        setTimeout(() => {
-            clItem.querySelector('math-field').focus();
-        },0);
+        const mathField = clItem.querySelector('math-field');
+        if (mathField) {
+            setTimeout(() => mathField.focus(),0);
+        }
     }
 });
 
@@ -244,7 +269,7 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
             lastItem.classList.add('active');
             lastItem.querySelector('math-field').focus();
             const newItem = document.createElement('div');
-            newItem.className= 'exp-item';
+            newItem.className = 'exp-item';
             const nextNum = expContainer.children.length + 1;
             newItem.innerHTML = `
             <div class="exp-left">
@@ -257,6 +282,7 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
                 <span class="material-symbols-outlined">close</span>
             </button>`;
             expContainer.appendChild(newItem);
+            sflListeners();
         }
     });
 });
