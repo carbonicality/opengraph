@@ -308,6 +308,7 @@ math-field::part(menu-toggle) {
 
 /* custom mathlive keyboard styling*/
 /* i used some AI here too */
+/* sorry if this sucks btw, this is my first time using mathlive */
 
 .ML__keyboard {
     position: fixed;
@@ -488,4 +489,30 @@ div[class*="alternative"] .MLK__keycap,
     fill: #fff !important;
     stroke: #fff !important;
     color: #fff !important;
+}
+
+.ML__keyboard .MLK__keycap.action svg,
+.ML__keyboard .MLK__keycap.shift svg,
+.ML__keyboard .MLK__keycap.fnbutton svg,
+.ML__keyboard .action svg,
+.ML__keyboard .shift svg {
+    width: 20px !important;
+    height: 20px !important;
+    display: block !important;
+    margin: 0 auto !important;
+}
+
+.ML__keyboard .MLK__keycap.action,
+.ML__keyboard .MLK__keycap.shift,
+.ML__keyboard .MLK__keycap.fnbutton,
+.ML__keyboard .action,
+.ML__keyboard .shift {
+    min-width: 32px !important;
+    padding: 4px 8px !important;
+}
+
+.ML__keyboard .MLK__keyboard-switcher {
+    height: 32px !important;
+    padding: 4px 8px !important;
+    font-size: 14px !important;
 }
