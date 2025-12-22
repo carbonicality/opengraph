@@ -27,6 +27,8 @@ function sflListeners() {
     document.querySelectorAll('math-field').forEach(mf => {
         mf.removeEventListener('focus',handleMFF);
         mf.addEventListener('focus',handleMFF);
+        mf.removeEventListener('input',updFunctions);
+        mf.addEventListener('input',updFunctions);
         mf.addEventListener('keydown',(e) => {
             if (e.key==='Enter') {
                 e.preventDefault();
@@ -314,38 +316,169 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
     });
 });
 
-document.querySelector('.math-kb').addEventListener('click', (e) => {
-    const btn = e.target.closest('.kb-btn');
-    if (!btn) return;
-    const activeItem = document.querySelector('.exp-item.active');
-    if (!activeItem) return;
-    const mathField = activeItem.querySelector('math-field');
-    if (!mathField) return;
-    if (btn.classList.contains('kb-bksp')) {
-        mathField.executeCommand('deleteBackward');
-    } else if (btn.classList.contains('kb-enter')) {
-        const expContainer = document.getElementById('exp');
-        const allItems = Array.from(expContainer.children);
-        const currIdx = allItems.indexOf(activeItem);
-        if (currIdx < allItems.length - 1) {
-            allItems[currIdx + 1].click();
-        } else {
-            activeItem.click();
-        }
-    } else {
-        const toInsert = btn.dataset.insert;
-        if (toInsert) {
-            if (toInsert === '^{}') {
-                mathField.executeCommand(['insert','^']);
-                mathField.executeCommand(['insert', '2']);
-            } else if (toInsert === '_{}') {
-                mathField.executeCommand(['insert','^']);
-            } else if (toInsert === '\\sqrt{}') {
-                mathField.executeCommand(['insert', '\\sqrt']);
+// plotting implementation
+let functions = [];
+
+function updFunctions() {
+    functions = [];
+    const expItems = document.querySelectorAll('.exp-item');
+    expItems.forEach((item,idx) => {
+        const mathField = item.querySelector('math-field');
+        if (!mathField) return;
+        if (item === document.getElementById('exp').lastElementChild) return;
+        let latex = mathField.value;
+        if (!latex || latex.trim() === '') return;
+        try {
+            let expr;
+            let isVertical = false;
+            let verticalX = 0;
+            //handle equations
+            if (latex.includes('=')) {
+                const parts = latex.split('=');
+                const left = parts[0].trim();
+                const right = parts[1].trim();
+                if (left === 'y') {
+                    expr = right;
+                }
+                else if(right === 'y') {
+                    expr = left;
+                }
+                else if (left === 'x') {
+                    isVertical = true;
+                    verticalX = parseFloat(right);
+                }
+                else if (right === 'x') {
+                    isVertical = true;
+                    verticalX = parseFloat(left);
+                }
+                else {
+                    expr = right;
+                }
             } else {
-                mathField.executeCommand(['insert', toInsert]);
+                expr = latex;
+            }
+            if (isVertical && !isNaN(verticalX)) {
+                functions.push({
+                    index: idx,
+                    isVertical: true,
+                    x: verticalX,
+                    latex: latex,
+                    colour: getColourIdx(idx)
+                });
+                return;
+            }
+            if (!expr) {
+                console.log("debug [skipping empty expression]",latex);
+                return;
+            }
+            let mathExpr = expr
+                /* had some help from AI here */
+                .replace(/\\cdot/g, '*')
+                .replace(/\\times/g, '*')
+                .replace(/\\div/g, '/')
+                .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '(($1)/($2))')
+                .replace(/\^\{([^}]+)\}/g, '^($1)')
+                .replace(/\\sqrt\{([^}]+)\}/g, 'sqrt($1)')
+                .replace(/\\sqrt\[([^\]]+)\]\{([^}]+)\}/g, 'nthRoot($2, $1)')
+                .replace(/\\sin/g, 'sin')
+                .replace(/\\cos/g, 'cos')
+                .replace(/\\tan/g, 'tan')
+                .replace(/\\ln/g, 'log')
+                .replace(/\\log/g, 'log10')
+                .replace(/\\pi/g, 'pi')
+                .replace(/\\left\(|\\right\)/g, '')
+                .replace(/\\left\||\\right\|/g, 'abs')
+                .replace(/\{|\}/g, '');
+            mathExpr = mathExpr.replace(/(\d)([a-zA-Z])/g,'$1*$2');
+            mathExpr = mathExpr.replace(/\)([a-zA-Z\d])/g, ')*$1');
+            mathExpr = mathExpr.replace(/([a-zA-Z\d])\(/g, '$1*(');
+            const compiled = math.compile(mathExpr);
+            functions.push({
+                index:idx,
+                expr:compiled,
+                latex:latex,
+                colour:getColourIdx(idx)
+            });
+        } catch (e) {
+            console.log('oh no! [error parsing expression]',latex,e);
+        }
+    });
+    drawGraph();
+}
+
+function getColourIdx(idx) {
+    const colours = [
+        "#2d70b3",
+        "#e74c3c",
+        '#27ae60',
+        '#f39c12',
+        '#9b59b6',
+        '#1abc9c',
+        '#e67e22',
+        '#34495e'
+    ]
+    return colours[idx % colours.length];
+}
+
+function plotFuncs() {
+    const width = canvas.width;
+    const height = canvas.height;
+    const centerX = width/2 + offsetX;
+    const centerY = height/2 + offsetY;
+    functions.forEach(func => {
+        ctx.strokeStyle = func.colour;
+        ctx.lineWidth = 2.5;
+        if (func.isVertical) {
+            const px = centerX + (func.x * scale);
+            if (px >= 0 && px <= width) {
+                ctx.beginPath();
+                ctx.moveTo(px,0);
+                ctx.lineTo(px,height);
+                ctx.stroke();
+            }
+            return;
+        }
+        ctx.beginPath();
+        let firstPoint = true;
+        let lastY = null;
+        for (let px = 0; px < width; px += 0.5) {
+            const x = (px - centerX)/scale;
+            try {
+                const y= func.expr.evaluate({x:x});
+                if (typeof y !== 'number' || !isFinite(y)) {
+                    firstPoint = true;
+                    lastY = null;
+                    continue;
+                }
+                const py = centerY - (y*scale);
+                if (lastY !== null && Math.abs(py-lastY) >height/2) {
+                    firstPoint = true;
+                }
+                if (Math.abs(py) < height * 3) {
+                    if (firstPoint) {
+                        ctx.moveTo(px,py);
+                        firstPoint = false;
+                    } else {
+                        ctx.lineTo(px,py);
+                    }
+                    lastY = py;
+                } else {
+                    firstPoint = true;
+                    lastY = null;
+                }
+            } catch (e) {
+                firstPoint = true;
+                lastY = null;
             }
         }
-    }
-    mathField.focus();
-});
+        ctx.stroke();
+    });
+}
+
+const ogDrawGraph = drawGraph;
+drawGraph = function() {
+    ogDrawGraph();
+    plotFuncs();
+};
+
+updFunctions();
