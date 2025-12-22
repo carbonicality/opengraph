@@ -27,8 +27,35 @@ function sflListeners() {
     document.querySelectorAll('math-field').forEach(mf => {
         mf.removeEventListener('focus',handleMFF);
         mf.addEventListener('focus',handleMFF);
+        mf.addEventListener('keydown',(e) => {
+            if (e.key==='Enter') {
+                e.preventDefault();
+                handleCommit();
+            }
+        });
     });
 }
+
+function handleCommit() {
+    const activeItem = document.querySelector('.exp-item.active');
+    if (!activeItem) return;
+    const expContainer = document.getElementById('exp');
+    const allItems = Array.from(expContainer.children);
+    const currIdx = allItems.indexOf(activeItem);
+    if (currIdx < allItems.length - 1) {
+        allItems[currIdx + 1].click();
+    } else {
+        activeItem.click();
+    }
+}
+
+document.addEventListener('click',(e) => {
+    if (e.target.closest('[data-command*="commit"')) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleCommit();
+    }
+},true);
 
 function handleMFF(e) {
     const item = e.target.closest('.exp-item');
