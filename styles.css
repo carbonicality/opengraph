@@ -581,3 +581,53 @@ div[class*="alternative"] .MLK__keycap,
     color: #fff !important;
     border-color: #2b70b3 !important;
 }
+
+.ML__keyboard .MLK__keycap.action,
+.ML__keyboard .MLK__keycap.shift,
+.ML__keyboard .MLK__keycap.fnbutton,
+.ML__keyboard .action,
+.ML__keyboard .shift {
+    min-width: 32px !important;
+    padding: 4px 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.ML__keyboard .ML__edit-toolbar.right > *,
+.ML__keyboard .ML__edit-toolbar.right button {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.ML__keyboard .ML__edit-toolbar.right > *:hover,
+.ML__keyboard .ML__edit-toolbar.right button:hover {
+    background: rgba(0,0,0,0.05) !important;
+}
+
+.ML__keyboard .action.hide-shift[data-command*="commit"] {
+    background: #2a70b3 !important;
+    color: #fff !important;
+    border-color: #2d70b3 !important;
+}
+
+.ML__keyboard .action.hide-shift[data-command*="commit"]:hover {
+    background: #3182ce !important;
+    border-color: #3182ce !important;
+}
+
+.ML__keyboard .action.hide-shift[data-command*="commit"]:active {
+    background: #225385 !important;
+}
+
+.ML__keyboard .action.hide-shift[data-command*="commit"] svg {
+    fill: #fff !important;
+    stroke: #fff !important;
+}
+
+.ML__keyboard .action.hide-shift.is-active svg,
+.ML__keyboard .action.hide-shift.is-pressed svg {
+    fill: #fff !important;
+    stroke: #fff !important;
+}
