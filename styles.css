@@ -516,3 +516,24 @@ div[class*="alternative"] .MLK__keycap,
     padding: 4px 8px !important;
     font-size: 14px !important;
 }
+
+/* make number and dot keycaps grey */
+.ML__keyboard .MLK__keycap[data-keycap-value="0"],
+.ML__keyboard .MLK__keycap[data-keycap-value="1"],
+.ML__keyboard .MLK__keycap[data-keycap-value="2"],
+.ML__keyboard .MLK__keycap[data-keycap-value="3"],
+.ML__keyboard .MLK__keycap[data-keycap-value="4"],
+.ML__keyboard .MLK__keycap[data-keycap-value="5"],
+.ML__keyboard .MLK__keycap[data-keycap-value="6"],
+.ML__keyboard .MLK__keycap[data-keycap-value="7"],
+.ML__keyboard .MLK__keycap[data-keycap-value="8"],
+.ML__keyboard .MLK__keycap[data-keycap-value="9"],
+.ML__keyboard .MLK__keycap[aria-label="."] {
+    background: #d8d8d8 !important;
+}
+
+/* change colour of arrow keys and bksp */
+.ML__keyboard .action.hide-shift,
+.ML__keyboard .MLK__keycap.action.hide-shift {
+    background: #d8d8d8 !important;
+}
