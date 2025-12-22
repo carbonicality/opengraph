@@ -165,7 +165,11 @@ body {
 
 .gcontainer {
     flex: 1;
-    position: relative;
+    position: fixed !important;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 400px;
     background: #fff;
 }
 
@@ -320,6 +324,7 @@ math-field::part(menu-toggle) {
 
 .ML__keyboard .MLK__backdrop {
     background: transparent !important;
+    box-shadow: none;
 }
 
 .ML__keyboard .MLK__toolbar{
