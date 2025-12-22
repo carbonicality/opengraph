@@ -537,3 +537,40 @@ div[class*="alternative"] .MLK__keycap,
 .ML__keyboard .MLK__keycap.action.hide-shift {
     background: #d8d8d8 !important;
 }
+
+/*its huge but i guess it works, make sure that numeric keycaps are still turning blue on press */
+.ML__keyboard .MLK__keycap[data-keycap-value="0"].is-active,
+.ML__keyboard .MLK__keycap[data-keycap-value="1"].is-active,
+.ML__keyboard .MLK__keycap[data-keycap-value="2"].is-active,
+.ML__keyboard .MLK__keycap[data-keycap-value="3"].is-active,
+.ML__keyboard .MLK__keycap[data-keycap-value="4"].is-active,
+.ML__keyboard .MLK__keycap[data-keycap-value="5"].is-active,
+.ML__keyboard .MLK__keycap[data-keycap-value="6"].is-active,
+.ML__keyboard .MLK__keycap[data-keycap-value="7"].is-active,
+.ML__keyboard .MLK__keycap[data-keycap-value="8"].is-active,
+.ML__keyboard .MLK__keycap[data-keycap-value="9"].is-active,
+.ML__keyboard .MLK__keycap[data-keycap-value="0"].is-pressed,
+.ML__keyboard .MLK__keycap[data-keycap-value="1"].is-pressed,
+.ML__keyboard .MLK__keycap[data-keycap-value="2"].is-pressed,
+.ML__keyboard .MLK__keycap[data-keycap-value="3"].is-pressed,
+.ML__keyboard .MLK__keycap[data-keycap-value="4"].is-pressed,
+.ML__keyboard .MLK__keycap[data-keycap-value="5"].is-pressed,
+.ML__keyboard .MLK__keycap[data-keycap-value="6"].is-pressed,
+.ML__keyboard .MLK__keycap[data-keycap-value="7"].is-pressed,
+.ML__keyboard .MLK__keycap[data-keycap-value="8"].is-pressed,
+.ML__keyboard .MLK__keycap[data-keycap-value="9"].is-pressed,
+.ML__keyboard .MLK__keycap[aria-label="."].is-active,
+.ML__keyboard .MLK__keycap[aria-label="."].is-pressed {
+    background: #2d70b3 !important;
+    color: #fff !important;
+    border-color: #2d70b3 !important;
+}
+
+.ML__keyboard .action.hide-shift.is-active,
+.ML__keyboard .action.hide-shift.is-pressed,
+.ML__keyboard .MLK__keycap.action.hide-shift.is-active,
+.ML__keyboard .MLK__keycap.action.hide-shift.is-pressed {
+    background: #2d70b3 !important;
+    color: #fff !important;
+    border-color: #2b70b3 !important;
+}
