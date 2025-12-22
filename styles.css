@@ -353,6 +353,7 @@ math-field::part(menu-toggle) {
     font-weight: 500 !important;
     color: #333 !important;
     box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+    font-family: 'mathjax-newcm',serif;
 }
 
 .ML__keyboard .MLK__keycap:hover {
@@ -535,6 +536,7 @@ div[class*="alternative"] .MLK__keycap,
 .ML__keyboard .MLK__keycap[data-keycap-value="9"],
 .ML__keyboard .MLK__keycap[aria-label="."] {
     background: #d8d8d8 !important;
+    font-size: 20px !important;
 }
 
 /* change colour of arrow keys and bksp */
