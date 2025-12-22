@@ -146,7 +146,7 @@ body {
     color: #aaa;
     cursor: pointer;
     font-size: 14px;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.15s;
