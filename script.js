@@ -351,23 +351,66 @@ function ltmExpr(expr) {
 function plotImplEquation(leftExpr,rightExpr,colour) {
     const width = canvas.width;
     const height = canvas.height;
-    const centerX = width/2 + offsetX;
-    const centerY = height/2 + offsetY;
-    let res = 2
-    ctx.fillStyle = colour;
-    for (let px = 0; px<width; px += res) {
-        for (let py = 0; py < height; py += res) {
-            const x = (px - centerX) /scale;
-            const y = (centerY - py) /scale;
-            try {
-                const leftVal = leftExpr.evaluate({x:x,y:y});
-                const rightVal = rightExpr.evaluate({x:x,y:y});
-                const diff = Math.abs(leftVal - rightVal);
-                if (diff < 0.1 / scale) {
-                    ctx.fillRect(px,py,res,res);
+    const centerX = width/2+ offsetX;
+    const centerY = height/2+offsetY;
+    const step = 3;
+    ctx.strokeStyle = colour;
+    ctx.lineWidth = 2.5;
+    const cols = Math.ceil(width/step);
+    const rows = Math.ceil(height/step);
+    for (let i = 0; i < cols; i++) {
+        for (let j = 0;j < rows - 1; j++) {
+            const px1 = i * step;
+            const py1 = j * step;
+            const px2= (i + 1) *step;
+            const py2 = (j + 1) *step;
+            const corners = [
+                {px:px1,py:py1},
+                {px:px2,py:py1},
+                {px:px2,py:py2},
+                {px:px1,py:py2}
+            ];
+            const vals = corners.map(c => {
+                const x = (c.px - centerX)/scale;
+                const y = (centerY - c.py)/scale;
+                try {
+                    const leftVal = leftExpr.evaluate({x:x,y:y});
+                    const rightVal = rightExpr.evaluate({x:x,y:y});
+                    return leftVal - rightVal;
+                } catch (e) {
+                    return NaN;
                 }
-            } catch (e) {
-                //skip
+            });
+            if (vals.some(v => !isFinite(v))) continue;
+            const signs = vals.map(v => v > 0 ? 1 : -1);
+            const hsChange = signs.some((s,idx) => s !== signs[0]);
+            if (hsChange) {
+                const thresh = 0.05;
+                const edges = [];
+                if (signs[0] !== signs[1]) {
+                    const t = Math.abs(vals[0])/(Math.abs(vals[0])+Math.abs(vals[1]));
+                    edges.push({px:px1 + t*step,py:py1});
+                }
+                if (signs[1] !== signs[2]) {
+                    const t = Math.abs(vals[1]/(Math.abs(vals[1])+Math.abs(vals[3])));
+                    edges.push({px:px2,py:py1 + t *step});
+                }
+                if (signs[2] !== signs[3]) {
+                    const t = Math.abs(vals[2])/(Math.abs(vals[2]) + Math.abs(vals[3]));
+                    edges.push({px:px2 - t* step, py: py2});
+                }
+                if (signs[3] !== signs[0]) {
+                    const t= Math.abs(vals[3]/(Math.abs(vals[3]) + Math.abs(vals[0])));
+                    edges.push({px:px1,py:py2 - t * step});
+                }
+                if (edges.length >= 2) {
+                    ctx.beginPath();
+                    ctx.moveTo(edges[0].px,edges[0].py);
+                    for (let k = 1; k < edges.length; k++) {
+                        ctx.lineTo(edges[k].px,edges[k].py);
+                    }
+                    ctx.stroke();
+                }
             }
         }
     }
