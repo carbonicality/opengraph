@@ -319,6 +319,60 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
 // plotting implementation
 let functions = [];
 
+function ltmExpr(expr) {
+    expr = expr.replace(/\\placeholder\{\}/g,'');
+    let mathExpr = expr
+        //had some help from AI for these
+        .replace(/\\cdot/g, '*')
+        .replace(/\\times/g, '*')
+        .replace(/\\div/g, '/')
+        .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '(($1)/($2))')
+        .replace(/\\frac\{([^}]*)\}\{?\}?/g, '($1)')
+        .replace(/\\frac(\d)(\d)/g, '(($1)/($2))')
+        .replace(/\\frac/g, '')
+        .replace(/\^\{([^}]+)\}/g, '^($1)')
+        .replace(/\\sqrt\{([^}]+)\}/g, 'sqrt($1)')
+        .replace(/\\sqrt\[([^\]]+)\]\{([^}]+)\}/g, 'nthRoot($2, $1)')
+        .replace(/\\sin/g, 'sin')
+        .replace(/\\cos/g, 'cos')
+        .replace(/\\tan/g, 'tan')
+        .replace(/\\ln/g, 'log')
+        .replace(/\\log/g, 'log10')
+        .replace(/\\pi/g, 'pi')
+        .replace(/\\left\(|\\right\)/g, '')
+        .replace(/\\left\||\\right\|/g, 'abs')
+        .replace(/\{|\}/g, '');
+    mathExpr = mathExpr.replace(/(\d)([a-zA-Z])/g,'$1*$2');
+    mathExpr = mathExpr.replace(/\)([a-zA-Z\d])/g, ')*$1');
+    mathExpr = mathExpr.replace(/([a-zA-Z\d])\(/g, '$1*(');
+    return mathExpr;
+}
+
+function plotImplEquation(leftExpr,rightExpr,colour) {
+    const width = canvas.width;
+    const height = canvas.height;
+    const centerX = width/2 + offsetX;
+    const centerY = height/2 + offsetY;
+    let res = 2
+    ctx.fillStyle = colour;
+    for (let px = 0; px<width; px += res) {
+        for (let py = 0; py < height; py += res) {
+            const x = (px - centerX) /scale;
+            const y = (centerY - py) /scale;
+            try {
+                const leftVal = leftExpr.evaluate({x:x,y:y});
+                const rightVal = rightExpr.evaluate({x:x,y:y});
+                const diff = Math.abs(leftVal - rightVal);
+                if (diff < 0.1 / scale) {
+                    ctx.fillRect(px,py,res,res);
+                }
+            } catch (e) {
+                //skip
+            }
+        }
+    }
+}
+
 function updFunctions() {
     functions = [];
     const expItems = document.querySelectorAll('.exp-item');
@@ -340,58 +394,53 @@ function updFunctions() {
                 if (left === 'y') {
                     expr = right;
                 }
-                else if(right === 'y') {
+                else if (right === 'y') {
                     expr = left;
                 }
-                else if (left === 'x') {
+                else if (left === 'x' && !right.includes('y')){
                     isVertical = true;
                     verticalX = parseFloat(right);
                 }
-                else if (right === 'x') {
+                else if (right === 'x' && !left.includes('y')) {
                     isVertical = true;
                     verticalX = parseFloat(left);
-                }
-                else {
-                    expr = right;
+                } else {
+                    try {
+                        const leftM = ltmExpr(left);
+                        const rightM = ltmExpr(right);
+                        const leftCpl = math.compile(leftM);
+                        const rightCpl = math.compile(rightM);
+                        functions.push({
+                            index:idx,
+                            isImpl:true,
+                            leftExpr:leftCpl,
+                            rightExpr:rightCpl,
+                            latex:latex,
+                            colour:getColourIdx(idx)
+                        });
+                        return;
+                    } catch (e) {
+                        console.log("uh oh - [couldn't compile impl equation]",latex,e);
+                        return;
+                    }
                 }
             } else {
                 expr = latex;
             }
             if (isVertical && !isNaN(verticalX)) {
                 functions.push({
-                    index: idx,
-                    isVertical: true,
-                    x: verticalX,
-                    latex: latex,
-                    colour: getColourIdx(idx)
+                    index:idx,
+                    isVertical:true,
+                    x:verticalX,
+                    latex:latex,
+                    colour:getColourIdx(idx)
                 });
                 return;
             }
             if (!expr) {
-                console.log("debug [skipping empty expression]",latex);
                 return;
             }
-            let mathExpr = expr
-                /* had some help from AI here */
-                .replace(/\\cdot/g, '*')
-                .replace(/\\times/g, '*')
-                .replace(/\\div/g, '/')
-                .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '(($1)/($2))')
-                .replace(/\^\{([^}]+)\}/g, '^($1)')
-                .replace(/\\sqrt\{([^}]+)\}/g, 'sqrt($1)')
-                .replace(/\\sqrt\[([^\]]+)\]\{([^}]+)\}/g, 'nthRoot($2, $1)')
-                .replace(/\\sin/g, 'sin')
-                .replace(/\\cos/g, 'cos')
-                .replace(/\\tan/g, 'tan')
-                .replace(/\\ln/g, 'log')
-                .replace(/\\log/g, 'log10')
-                .replace(/\\pi/g, 'pi')
-                .replace(/\\left\(|\\right\)/g, '')
-                .replace(/\\left\||\\right\|/g, 'abs')
-                .replace(/\{|\}/g, '');
-            mathExpr = mathExpr.replace(/(\d)([a-zA-Z])/g,'$1*$2');
-            mathExpr = mathExpr.replace(/\)([a-zA-Z\d])/g, ')*$1');
-            mathExpr = mathExpr.replace(/([a-zA-Z\d])\(/g, '$1*(');
+            let mathExpr= ltmExpr(expr);
             const compiled = math.compile(mathExpr);
             functions.push({
                 index:idx,
@@ -438,9 +487,13 @@ function plotFuncs() {
             }
             return;
         }
-        ctx.beginPath();
         let firstPoint = true;
         let lastY = null;
+        if (func.isImpl) {
+            plotImplEquation(func.leftExpr,func.rightExpr,func.colour);
+            return;
+        }
+        ctx.beginPath();
         for (let px = 0; px < width; px += 0.5) {
             const x = (px - centerX)/scale;
             try {
