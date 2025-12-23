@@ -590,8 +590,66 @@ function plotFuncs() {
             if (!isLinear) {
                 plotImplEquation(func.leftExpr,func.rightExpr,func.colour);
             }
-            return;
-        }
+            try {
+                let y1 = -100;
+                let y2 = 100;
+                const f1 = func.leftExpr.evaluate({x:0,y:y1}) - func.rightExpr.evaluate({x:0,y:y1});
+                const f2 = func.leftExpr.evaluate({x:0,y:y2}) - func.rightExpr.evaluate({x:0,y:y2});
+                if (Math.sign(f1) !== Math.sign(f2)) {
+                    for (let i = 0; i < 30; i++) {
+                        const yMid = (y1+y2)/2;
+                        const leftVal = func.leftExpr.evaluate({x:0,y:yMid});
+                        const rightVal = func.rightExpr.evaluate({x:0,y:yMid});
+                        const diff = leftVal - rightVal;
+                        if (Math.abs(diff) < 0.0001) {
+                            const py = centerY - (yMid * scale);
+                            if (py >= -20 && py <= height + 20) {
+                                ctx.fillStyle = func.colour;
+                                ctx.beginPath();
+                                ctx.arc(centerX,py,5,0,Math.PI*2);
+                                ctx.fill();
+                            }
+                            break;
+                        }
+                        if (Math.sign(diff) === Math.sign(f1)) {
+                            y1 = yMid;
+                        } else {
+                            y2 = yMid;
+                        }
+                    }
+                }
+            } catch (e) {}
+        try {
+            let x1 = -100;
+            let x2 = 100;
+            const f1 = func.leftExpr.evaluate({x:x1,y:0}) - func.rightExpr.evaluate({x:x1,y:0});
+            const f2 = func.leftExpr.evaluate({x:x2,y:0}) - func.rightExpr.evaluate({x:x2,y:0});
+            if (Math.sign(f1) !== Math.sign(f2)) {
+                for (let i = 0; i < 30; i++) {
+                    const xMid = (x1 + x2) /2;
+                    const leftVal = func.leftExpr.evaluate({x:xMid,y:0});
+                    const rightVal = func.rightExpr.evaluate({x:xMid,y:0});
+                    const diff = leftVal-rightVal;
+                    if (Math.abs(diff) < 0.0001) {
+                        const px = centerX + (xMid * scale);
+                        if (px >= -20 && px <= width + 20) {
+                            ctx.fillStyle = func.colour;
+                            ctx.beginPath();
+                            ctx.arc(px,centerY,5,0,Math.PI*2);
+                            ctx.fill();
+                        }
+                        break;
+                    }
+                    if (Math.sign(diff) === Math.sign(f1)) {
+                        x1 = xMid;
+                    } else {
+                        x2 = xMid;
+                    }
+                }
+            } 
+        } catch(e) {}
+        return;
+    }
         ctx.beginPath();
         for (let px = 0; px < width; px += 0.5) {
             const x = (px - centerX)/scale;
@@ -624,6 +682,68 @@ function plotFuncs() {
             }
         }
         ctx.stroke();
+        try {
+            const yInt = func.expr.evaluate({x:0});
+            if (typeof yInt === 'number' && isFinite(yInt)) {
+                const py = centerY - (yInt * scale);
+                if (py >= -20 && py <= height + 20) {
+                    ctx.fillStyle = func.colour;
+                    ctx.beginPath();
+                    ctx.arc(centerX,py,5,0,Math.PI *2);
+                    ctx.fill();
+                }
+            }
+        } catch (e) {
+            //no yint for this function
+        }
+        try {
+            const srchRange = width / scale;
+            const step = 0.05;
+            let lastY = null;
+            let lastX = null;
+            for (let x = -srchRange; x <= srchRange; x+=step) {
+                try {
+                    const y= func.expr.evaluate({x:x});
+                    if (typeof y === 'number' && isFinite(y)) {
+                        if (lastY !== null && lastY !== 0 && y !== 0) {
+                            if (Math.sign(lastY) !== Math.sign(y)) {
+                                let x1 = lastX;
+                                let x2 = x;
+                                for (let i = 0; i < 20; i++) {
+                                    const xMid = (x1 + x2)/2;
+                                    const yMid = func.expr.evaluate({x:xMid});
+                                    if (Math.abs(yMid) < 0.0001) {
+                                        const px = centerX + (xMid * scale);
+                                        if (px >= -20 && px <= width + 20) {
+                                            ctx.fillStyle = func.colour;
+                                            ctx.beginPath();
+                                            ctx.arc(px,centerY,5,0,Math.PI *2);
+                                            ctx.fill();
+                                        }
+                                        break;
+                                    }
+                                    if (Math.sign(yMid) === Math.sign(lastY)) {
+                                        x1 = xMid;
+                                    } else {
+                                        x2 = xMid;
+                                    }
+                                }
+                            }
+                            lastY = y;
+                            lastX = x;
+                        } else {
+                            lastY = null;
+                            lastX = null;
+                        }
+                    }
+                } catch (e) {
+                    lastY = null;
+                    lastX = null;
+                }
+            }
+        } catch (e) {
+            //no x-ints found
+        }
     });
 }
 
