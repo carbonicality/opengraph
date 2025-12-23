@@ -373,6 +373,59 @@ function plotImplEquation(leftExpr,rightExpr,colour) {
     }
 }
 
+function plotImplLinear(leftExpr,rightExpr,colour) {
+    const width = canvas.width;
+    const height = canvas.height;
+    const centerX = width/2 + offsetX;
+    const centerY = height/2 + offsetY;
+    try {
+        const p1 = {x:0,y:0};
+        const p2 = {x:1,y:0};
+        const p3 = {x:0,y:1};
+        const left1 = leftExpr.evaluate(p1);
+        const right1 = rightExpr.evaluate(p1);
+        const left2 = leftExpr.evaluate(p2);
+        const right2 = rightExpr.evaluate(p2);
+        const left3 = leftExpr.evaluate(p3);
+        const right3 = rightExpr.evaluate(p3);
+        const f1 = left1 - right1;
+        const f2 = left2 - right2;
+        const f3 = left3 - right3;
+        const a = f2 - f1;
+        const b = f3 - f1;
+        const c = f1;
+        const testP = {x:2,y:3};
+        const testLeft = leftExpr.evaluate(testP);
+        const testRight = rightExpr.evaluate(testP);
+        const testF = testLeft - testRight;
+        const expF = a*2 + b*3 + c;
+        if (Math.abs(testF - expF) < 0.0001) {
+            ctx.strokeStyle = colour;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            if (Math.abs(b) > 0.001) {
+                const y1 = (-a * ((0 - centerX)/scale) - c)/b;
+                const y2 = (-a * ((width - centerX)/scale) -c)/b;
+                const py1 = centerY - y1 *scale;
+                const py2 = centerY - y2 *scale;
+                ctx.moveTo(0,py1);
+                ctx.lineTo(width,py2);
+            } else if (Math.abs(a) > 0.001) {
+                const x = -c/a;
+                const px = centerX + x * scale;
+                ctx.moveTo(px,0);
+                ctx.lineTo(px,height);
+            }
+            ctx.stroke();
+            return true;
+        }
+    } catch (e) {
+        //not linear, fallback to implicit
+        console.log('falling back to implicit');
+    }
+    return false;
+}
+
 function updFunctions() {
     functions = [];
     const expItems = document.querySelectorAll('.exp-item');
@@ -490,7 +543,10 @@ function plotFuncs() {
         let firstPoint = true;
         let lastY = null;
         if (func.isImpl) {
-            plotImplEquation(func.leftExpr,func.rightExpr,func.colour);
+            const isLinear = plotImplLinear(func.leftExpr,func.rightExpr,func.colour);
+            if (!isLinear) {
+                plotImplEquation(func.leftExpr,func.rightExpr,func.colour);
+            }
             return;
         }
         ctx.beginPath();
