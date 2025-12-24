@@ -285,6 +285,7 @@ document.getElementById('exp').addEventListener('click',(e) => {
             expContainer.firstElementChild.classList.add('active');
             expContainer.firstElementChild.querySelector('math-field').focus();
         }
+        updFunctions();
     }
 });
 
