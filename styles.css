@@ -670,3 +670,7 @@ div[class*="alternative"] .MLK__keycap,
 .kb-toggle-btn:active {
     background: #eee;
 }
+
+.tb-spacer {
+    flex: 1;
+}
