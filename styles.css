@@ -94,14 +94,15 @@ body {
 
 .exp-left {
     display: flex;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
     justify-content: flex-start;
     padding: 8px 12px;
     min-width: 40px;
     background: #f5f5f5;
     border-right: 1px solid #e5e5e5;
+    gap: 6px;
 }
-
 .exp-item:hover {
     background: #f8f8f8;
 }
@@ -673,4 +674,17 @@ div[class*="alternative"] .MLK__keycap,
 
 .tb-spacer {
     flex: 1;
+}
+
+.colour-ind {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.colour-ind.hidden {
+    opacity: 0;
+    visibility: hidden;
 }

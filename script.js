@@ -243,9 +243,11 @@ document.getElementById('exp').addEventListener('click', (e) => {
         const newItem =document.createElement('div');
         newItem.className = 'exp-item';
         const nextNum = expContainer.children.length + 1;
+        const colour = getColourIdx(nextNum-1);
         newItem.innerHTML = `
         <div class="exp-left">
             <span class="exp-num">${nextNum}</span>
+            <div class="colour-ind hidden" style="background-color:${colour};"></div>
         </div>
         <div class="exp-content">
             <math-field></math-field>
@@ -314,9 +316,11 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
             const newItem = document.createElement('div');
             newItem.className = 'exp-item';
             const nextNum = expContainer.children.length + 1;
+            const colour = getColourIdx(nextNum-1);
             newItem.innerHTML = `
             <div class="exp-left">
                 <span class="exp-num">${nextNum}</span>
+                <div class="colour-ind" style="background-color:${colour};"></div>
             </div>
             <div class="exp-content">
                 <math-field></math-field>
@@ -498,11 +502,16 @@ function updFunctions() {
         if (!mathField) return;
         if (item === document.getElementById('exp').lastElementChild) return;
         let latex = mathField.value;
-        if (!latex || latex.trim() === '') return;
+        const colourInd = item.querySelector('.colour-ind');
+        if (!latex || latex.trim() === '') {
+            if (colourInd) colourInd.classList.add('hidden');
+            return;
+        }
         try {
             let expr;
             let isVertical = false;
             let verticalX = 0;
+            let hasVFunc = false;
             //handle equations
             if (latex.includes('=')) {
                 const parts = latex.split('=');
@@ -510,17 +519,21 @@ function updFunctions() {
                 const right = parts[1].trim();
                 if (left === 'y') {
                     expr = right;
+                    hasVFunc = true;
                 }
                 else if (right === 'y') {
                     expr = left;
+                    hasVFunc = true;
                 }
                 else if (left === 'x' && !right.includes('y')){
                     isVertical = true;
                     verticalX = parseFloat(right);
+                    hasVFunc = !isNaN(verticalX);
                 }
                 else if (right === 'x' && !left.includes('y')) {
                     isVertical = true;
                     verticalX = parseFloat(left);
+                    hasVFunc = !isNaN(verticalX);
                 } else {
                     try {
                         const leftM = ltmExpr(left);
@@ -535,14 +548,17 @@ function updFunctions() {
                             latex:latex,
                             colour:getColourIdx(idx)
                         });
+                        if (colourInd) colourInd.classList.remove('hidden');
                         return;
                     } catch (e) {
                         console.log("uh oh - [couldn't compile impl equation]",latex,e);
+                        if (colourInd) colourInd.classList.add('hidden');
                         return;
                     }
                 }
             } else {
                 expr = latex;
+                hasVFunc = true;
             }
             if (isVertical && !isNaN(verticalX)) {
                 functions.push({
@@ -552,9 +568,11 @@ function updFunctions() {
                     latex:latex,
                     colour:getColourIdx(idx)
                 });
+                if (colourInd) colourInd.classList.remove('hidden');
                 return;
             }
             if (!expr) {
+                if (colourInd) colourInd.classList.add('hidden');
                 return;
             }
             let mathExpr= ltmExpr(expr);
@@ -565,8 +583,11 @@ function updFunctions() {
                 latex:latex,
                 colour:getColourIdx(idx)
             });
+            if (colourInd) colourInd.classList.remove('hidden');
         } catch (e) {
             console.log('oh no! [error parsing expression]',latex,e);
+            const colourInd = item.querySelector('.colour-ind');
+            if (colourInd) colourInd.classList.add('hidden');
         }
     });
     drawGraph();
@@ -858,6 +879,7 @@ function restoreState(stateStr) {
     expContainer.innerHTML='';
     state.forEach((itemState,idx) => {
         const newItem = document.createElement('div');
+        const colour = getColourIdx(idx);
         newItem.className = 'exp-item';
         if (itemState.isActive) {
             newItem.classList.add('active');
@@ -865,6 +887,7 @@ function restoreState(stateStr) {
         newItem.innerHTML = `
         <div class="exp-left">
             <span class="exp-num">${idx+1}</span>
+            <div class="colour-ind hidden" style="background-color:${colour};"></div>
         </div>
         <div class="exp-content">
             <math-field></math-field>
