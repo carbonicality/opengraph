@@ -697,27 +697,27 @@ function plotFuncs() {
             //no yint for this function
         }
         try {
-            const srchRange = width / scale;
+            const srchRange = width/scale;
             const step = 0.05;
             let lastY = null;
             let lastX = null;
-            for (let x = -srchRange; x <= srchRange; x+=step) {
+            for (let x = -srchRange; x <= srchRange; x+= step) {
                 try {
-                    const y= func.expr.evaluate({x:x});
+                    const y = func.expr.evaluate({x:x});
                     if (typeof y === 'number' && isFinite(y)) {
-                        if (lastY !== null && lastY !== 0 && y !== 0) {
-                            if (Math.sign(lastY) !== Math.sign(y)) {
+                        if (lastY !== null) {
+                            if (Math.sign(lastY) !== Math.sign(y) && lastY !== 0 && y !== 0) {
                                 let x1 = lastX;
                                 let x2 = x;
-                                for (let i = 0; i < 20; i++) {
-                                    const xMid = (x1 + x2)/2;
+                                for (let i=0;i<20;i++) {
+                                    const xMid = (x1+x2)/2;
                                     const yMid = func.expr.evaluate({x:xMid});
                                     if (Math.abs(yMid) < 0.0001) {
-                                        const px = centerX + (xMid * scale);
+                                        const px = centerX+(xMid*scale);
                                         if (px >= -20 && px <= width + 20) {
                                             ctx.fillStyle = func.colour;
                                             ctx.beginPath();
-                                            ctx.arc(px,centerY,5,0,Math.PI *2);
+                                            ctx.arc(px,centerY,5,0,Math.PI*2);
                                             ctx.fill();
                                         }
                                         break;
@@ -729,12 +729,12 @@ function plotFuncs() {
                                     }
                                 }
                             }
-                            lastY = y;
-                            lastX = x;
-                        } else {
-                            lastY = null;
-                            lastX = null;
                         }
+                        lastY=y;
+                        lastX=x;
+                    } else {
+                        lastY = null;
+                        lastX = null;
                     }
                 } catch (e) {
                     lastY = null;
