@@ -762,4 +762,47 @@ drawGraph = function() {
     plotFuncs();
 };
 
+//handle custom kb toggle button too
+document.querySelector('.kb-toggle-btn').addEventListener('click',() => {
+    const activeItem = document.querySelector('.exp-item.active');
+    if (!activeItem) {
+        const firstItem = document.querySelector('.exp-item');
+        if (firstItem) {
+            firstItem.classList.add('active');
+            const mathField = firstItem.querySelector('math-field');
+            if (mathField) {
+                mathField.focus();
+                if (mathField.virtualKeyboardMode === 'off') {
+                    mathField.executeCommand('showVirtualKeyboard');
+                } else {
+                    mathField.executeCommand('hideVirtualKeyboard');
+                }
+            }
+        }
+        return;
+    }
+    const mathField = activeItem.querySelector('math-field');
+    if (mathField) {
+        mathField.focus();
+        if (mathField.virtualKeyboardMode === 'off' || !window.mathVirtualKeyboard.visible) {
+            mathField.executeCommand('showVirtualKeyboard');
+        } else {
+            mathField.executeCommand('hideVirtualKeyboard');
+        }
+    }
+});
+
+const updKBText = () => {
+    const btn = document.querySelector('.kb-toggle-btn span:not(.material-symbols-outlined)');
+    if (window.mathVirtualKeyboard && window.mathVirtualKeyboard.visible) {
+        btn.textContent = 'Close math keyboard';
+    } else {
+        btn.textContent = 'Open math keyboard';
+    }
+};
+
+if (window.mathVirtualKeyboard) {
+    window.mathVirtualKeyboard.addEventListener('geometrychange',updKBText);
+}
+
 updFunctions();
