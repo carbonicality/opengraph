@@ -4,6 +4,11 @@ const ctx = canvas.getContext('2d');
 let scale = 100;
 let offsetX = 0;
 let offsetY = 0;
+let functions = [];
+let history = [];
+let histIdx = -1;
+const MAX_HIST = 50;
+let isRes = false;
 
 function resizeCanvas() {
     canvas.width = canvas.offsetWidth;
@@ -321,13 +326,20 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
             </button>`;
             expContainer.appendChild(newItem);
             sflListeners();
+            saveState();
+        } else if (idx ===1) {
+            //menu, will impl later
+        } else if (idx ===2) {
+            //diddyblud undo.
+            undo();
+        } else if (idx===3) {
+            //diddyblud redo.
+            redo();
         }
     });
 });
 
 // plotting implementation
-let functions = [];
-
 function ltmExpr(expr) {
     expr = expr.replace(/\\placeholder\{\}/g,'');
     let mathExpr = expr
@@ -558,6 +570,9 @@ function updFunctions() {
         }
     });
     drawGraph();
+    if (!isRes) {
+        saveState();
+    }
 }
 
 function getColourIdx(idx) {
@@ -804,5 +819,210 @@ const updKBText = () => {
 if (window.mathVirtualKeyboard) {
     window.mathVirtualKeyboard.addEventListener('geometrychange',updKBText);
 }
+
+//undo and redo stuff
+function captureState() {
+    const expContainer = document.getElementById('exp');
+    const items = Array.from(expContainer.children);
+    const state = items.map((item,idx) => {
+        const mathField = item.querySelector('math-field');
+        const isActive = item.classList.contains('active');
+        return {
+            latex: mathField ? mathField.value : '',
+            isActive: isActive
+        };
+    });
+    return JSON.stringify(state);
+}
+
+function saveState() {
+    if (isRes) return;
+    const curState = captureState();
+    if (histIdx >= 0 && history[histIdx] === curState) {
+        return;
+    }
+    history = history.slice(0,histIdx + 1);
+    history.push(curState);
+    if (history.length > MAX_HIST) {
+        history.shift();
+    } else {
+        histIdx++;
+    }
+    updURButtons();
+}
+
+function restoreState(stateStr) {
+    isRes = true;
+    const state = JSON.parse(stateStr);
+    const expContainer = document.getElementById('exp');
+    expContainer.innerHTML='';
+    state.forEach((itemState,idx) => {
+        const newItem = document.createElement('div');
+        newItem.className = 'exp-item';
+        if (itemState.isActive) {
+            newItem.classList.add('active');
+        }
+        newItem.innerHTML = `
+        <div class="exp-left">
+            <span class="exp-num">${idx+1}</span>
+        </div>
+        <div class="exp-content">
+            <math-field></math-field>
+        </div>
+        <button class="delete-btn">
+            <span class="material-symbols-outlined">close</span>
+        </button>`;
+        expContainer.appendChild(newItem);
+        const mathField = newItem.querySelector('math-field');
+        if (mathField && itemState.latex) {
+            mathField.value = itemState.latex;
+        }
+    });
+    sflListeners();
+    const activeItem = document.querySelector('.exp-item.active');
+    if (activeItem) {
+        const mathField = activeItem.querySelector('math-field');
+        if (mathField) {
+            setTimeout(() => mathField.focus(),0);
+        }
+    }
+    functions =[];
+    const expItems = document.querySelectorAll('.exp-item');
+    expItems.forEach((item,idx) => {
+        const mathField = item.querySelector('math-field');
+        if (!mathField) return;
+        if (item === document.getElementById('exp').lastElementChild) return;
+        let latex= mathField.value;
+        if (!latex || latex.trim() === '') return;
+        try{
+            let expr;
+            let isVertical = false;
+            let verticalX= 0;
+            if (latex.includes('=')) {
+                const parts = latex.split('=');
+                const left = parts[0].trim();
+                const right = parts[1].trim();
+                if (left === 'y') {
+                    expr=right;
+                }
+                else if (right === 'y') {
+                    expr=left;
+                }
+                else if (left === 'x' && !right.includes('y')) {
+                    isVertical = true;
+                    verticalX = parseFloat(right);
+                }
+                else if (right === 'x' && !left.includes('y')) {
+                    isVertical = true;
+                    verticalX = parseFloat(left);
+                } else {
+                    try {
+                        const leftM = ltmExpr(left);
+                        const rightM = ltmExpr(right);
+                        const leftCpl = math.compile(leftM);
+                        const rightCpl = math.compile(rightM);
+                        functions.push({
+                            index:idx,
+                            isImpl:true,
+                            leftExpr:leftCpl,
+                            rightExpr:rightCpl,
+                            latex:latex,
+                            colour:getColourIdx(idx)
+                        });
+                        return;
+                    } catch (e) {
+                        console.log("uh oh - [could'nt compile impl equation]",latex,e);
+                        return;
+                    }
+                }
+            } else {
+                expr = latex;
+            }
+            if (isVertical && !isNaN(verticalX)) {
+                functions.push({
+                    index:idx,
+                    isVertical:true,
+                    x:verticalX,
+                    latex:latex,
+                    colour:getColourIdx(idx)
+                });
+                return;
+            }
+            if (!expr) {
+                return;
+            }
+            let mathExpr=ltmExpr(expr);
+            const compiled = math.compile(mathExpr);
+            functions.push({
+                index:idx,
+                expr:compiled,
+                latex:latex,
+                colour:getColourIdx(idx)
+            });
+        } catch (e) {
+            console.log('oh no! [error parsing exp]',latex,e);
+        }
+    });
+    drawGraph();
+    isRes = false;
+    updURButtons();
+}
+
+function undo() {
+    if (histIdx > 0) {
+        histIdx--;
+        restoreState(history[histIdx]);
+    }
+}
+
+function redo() {
+    if (histIdx <history.length -1) {
+        histIdx++;
+        restoreState(history[histIdx]);
+    }
+}
+
+function updURButtons() {
+    const toolbarBtns = document.querySelectorAll('.toolbar-btn');
+    const undoBtn = toolbarBtns[2];
+    const redoBtn = toolbarBtns[3];
+    if (undoBtn) {
+        if (histIdx >0) {
+            undoBtn.style.opacity = '1';
+            undoBtn.style.cursor = 'pointer';
+            undoBtn.disabled = false;
+        } else {
+            undoBtn.style.opacity = '0.3';
+            undoBtn.style.cursor = 'not-allowed';
+            undoBtn.disabled=true;
+        }
+    }
+    if (redoBtn) {
+        if (histIdx < history.length -1) {
+            redoBtn.style.opacity='1';
+            redoBtn.style.cursor='pointer';
+            redoBtn.disabled=false;
+        } else {
+            redoBtn.style.opacity = '0.3';
+            redoBtn.style.cursor = 'not-allowed';
+            redoBtn.disabled =true;
+        }
+    }
+}
+
+setTimeout(() => {
+    saveState();
+},100);
+
+document.addEventListener('keydown',(e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z'&& !e.shiftKey) {
+        e.preventDefault();
+        undo();
+    }
+    if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') || (e.ctrlKey && e.key === 'y')) {
+        e.preventDefault();
+        redo();
+    }
+});
 
 updFunctions();
