@@ -276,6 +276,14 @@ document.getElementById('exp').addEventListener('click',(e) => {
         if (item === expContainer.lastElementChild) {
             return;
         }
+        if (expContainer.children.length <= 2) {
+            const mathField = item.querySelector('math-field');
+            if (mathField) {
+                mathField.value = '';
+                updFunctions();
+            }
+            return;
+        }
         const wasActive = item.classList.contains('active');
         item.remove();
         Array.from(expContainer.children).forEach((expItem,idx) => {
