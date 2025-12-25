@@ -357,7 +357,7 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
             sflListeners();
             saveState();
         } else if (idx ===1) {
-            //menu, will impl later
+            //menu btn, implemented outside of here
         } else if (idx ===2) {
             //diddyblud undo.
             undo();
@@ -366,6 +366,57 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
             redo();
         }
     });
+});
+
+//some dropdown menu stuff
+const menuBtn = document.getElementById('menu-btn');
+const menuDrp = document.getElementById('menu-drp');
+menuBtn.addEventListener('click',(e)=> {
+    e.stopPropagation();
+    menuDrp.classList.toggle('show');
+});
+
+document.addEventListener('click',(e)=> {
+    if (!menuDrp.contains(e.target)&&e.target !== menuBtn) {
+        menuDrp.classList.remove('show');
+    }
+});
+
+document.addEventListener('click',(e)=> {
+    if (!menuDrp.contains(e.target)&&e.target!==menuBtn) {
+        menuDrp.classList.remove('show');
+    }
+});
+
+document.getElementById('export').addEventListener('click',()=> {
+    menuDrp.classList.remove('show');
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.fillStyle='#fff';
+    tempCtx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
+    tempCtx.drawImage(canvas,0,0);
+    tempCanvas.toBlob((blob)=>{
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href=url;
+        a.download=`opengraph-${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+});
+
+document.getElementById('save').addEventListener('click',()=> {
+    menuDrp.classList.remove('show');
+    //implement this soon
+});
+
+document.getElementById('load').addEventListener('click',()=> {
+    menuDrp.classList.remove('show');
+    //implement this soon too
 });
 
 // plotting implementation

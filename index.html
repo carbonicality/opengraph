@@ -17,7 +17,7 @@
                     <!-- used AI for material symbols cuz idk how to use it fully -->
                     <span class="material-symbols-outlined">add</span>
                 </button>
-                <button class="toolbar-btn">
+                <button class="toolbar-btn" id="menu-btn">
                     <span class="material-symbols-outlined">menu</span>
                 </button>
                 <div class="tb-spacer"></div>
@@ -27,6 +27,20 @@
                 <button class="toolbar-btn">
                     <span class="material-symbols-outlined">redo</span>
                 </button>
+            </div>
+            <div class="menu-drp" id="menu-drp">
+                <div class="menu-item" id="export">
+                    <div class="material-symbols-outlined">download</div>
+                    <span>Export as PNG</span>
+                </div>
+                <div class="menu-item" id="save">
+                    <span class="material-symbols-outlined">save</span>
+                    <span>Save session</span>
+                </div>
+                <div class="menu-item" id="load">
+                    <span class="material-symbols-outlined">folder_open</span>
+                    <span>Load session</span>
+                </div>
             </div>
             <div class="exp" id="exp">
                 <div class="exp-item active">
