@@ -9,6 +9,8 @@ let history = [];
 let histIdx = -1;
 const MAX_HIST = 50;
 let isRes = false;
+let POIs = [];
+let hovPoint = null;
 
 function resizeCanvas() {
     canvas.width = canvas.offsetWidth;
@@ -200,7 +202,7 @@ canvas.addEventListener('mousedown',(e) => {
     canvas.style.cursor = 'grabbing';
 });
 
-canvas.addEventListener('mousemove',(e) => {
+canvas.addEventListener('mousemove',(e)=> {
     if (isDrg) {
         const dx = e.clientX - lastX;
         const dy = e.clientY - lastY;
@@ -209,6 +211,27 @@ canvas.addEventListener('mousemove',(e) => {
         lastX = e.clientX;
         lastY = e.clientY;
         drawGraph();
+    } else {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX-rect.left;
+        const mouseY = e.clientY-rect.top;
+        hovPoint = null;
+        const hovRadius = 15;
+        for (let poi of POIs) {
+            const dx=mouseX-poi.px;
+            const dy=mouseY-poi.py;
+            const dist =Math.sqrt(dx*dx + dy*dy);
+            if (dist <= hovRadius) {
+                hovPoint = poi;
+                canvas.style.cursor = 'pointer';
+                drawGraph();
+                return;
+            }
+        }
+        if (canvas.style.cursor === 'pointer') {
+            canvas.style.cursor='default';
+            drawGraph();
+        }
     }
 });
 
@@ -220,6 +243,8 @@ canvas.addEventListener('mouseup',() => {
 canvas.addEventListener('mouseleave',() => {
     isDrg = false;
     canvas.style.cursor = 'default';
+    hovPoint = null;
+    drawGraph();
 });
 
 canvas.addEventListener('wheel',(e) => {
@@ -615,6 +640,7 @@ function plotFuncs() {
     const height = canvas.height;
     const centerX = width/2 + offsetX;
     const centerY = height/2 + offsetY;
+    POIs = [];
     functions.forEach(func => {
         ctx.strokeStyle = func.colour;
         ctx.lineWidth = 2.5;
@@ -653,6 +679,15 @@ function plotFuncs() {
                                 ctx.beginPath();
                                 ctx.arc(centerX,py,5,0,Math.PI*2);
                                 ctx.fill();
+                                POIs.push({
+                                    x:0,
+                                    y:yMid,
+                                    px:centerX,
+                                    py:py,
+                                    type:'y-intercept',
+                                    colour:func.colour,
+                                    funcIdx:func.index
+                                });
                             }
                             break;
                         }
@@ -682,6 +717,15 @@ function plotFuncs() {
                             ctx.beginPath();
                             ctx.arc(px,centerY,5,0,Math.PI*2);
                             ctx.fill();
+                            POIs.push({
+                                x:xMid,
+                                y:0,
+                                px:px,
+                                py:centerY,
+                                type:'x-intercept',
+                                colour:func.colour,
+                                funcIdx:func.index
+                            });
                         }
                         break;
                     }
@@ -736,6 +780,15 @@ function plotFuncs() {
                     ctx.beginPath();
                     ctx.arc(centerX,py,5,0,Math.PI *2);
                     ctx.fill();
+                    POIs.push({
+                        x:0,
+                        y:yInt,
+                        px:centerX,
+                        py:py,
+                        type:'y-intercept',
+                        colour:func.colour,
+                        funcIdx:func.index
+                    });
                 }
             }
         } catch (e) {
@@ -764,6 +817,15 @@ function plotFuncs() {
                                             ctx.beginPath();
                                             ctx.arc(px,centerY,5,0,Math.PI*2);
                                             ctx.fill();
+                                            POIs.push({
+                                                x:xMid,
+                                                y:0,
+                                                px:px,
+                                                py:centerY,
+                                                type:'x-intercept',
+                                                colour:func.colour,
+                                                funcIdx:func.index
+                                            });
                                         }
                                         break;
                                     }
@@ -790,6 +852,9 @@ function plotFuncs() {
             //no x-ints found
         }
     });
+    if (hovPoint) {
+        drawTooltip(hovPoint);
+    }
 }
 
 const ogDrawGraph = drawGraph;
@@ -1047,5 +1112,61 @@ document.addEventListener('keydown',(e) => {
         redo();
     }
 });
+
+function drawTooltip(point) {
+    const padding=8;
+    const lnHeight = 18;
+    const xLabel = `x: ${point.x.toFixed(3)}`;
+    const yLabel = `y: ${point.y.toFixed(3)}`;
+    const typeLabel = point.type.replace('-',' ');
+    ctx.font='13px Ubuntu';
+    const xWidth = ctx.measureText(xLabel).width;
+    const yWidth = ctx.measureText(yLabel).width;
+    const typeWidth = ctx.measureText(typeLabel).width;
+    const maxWidth = Math.max(xWidth,yWidth,typeWidth);
+    const tooltipWidth = maxWidth+padding*2;
+    const tooltipHeight = lnHeight*3 + padding*2;
+    let tooltipX = point.px + 15;
+    let tooltipY = point.py - tooltipHeight-15;
+    if (tooltipX+tooltipWidth>canvas.width-10) {
+        tooltipX=point.px-tooltipWidth-15;
+    }
+    if (tooltipY < 10) {
+        tooltipY=point.py+15;
+    }
+    ctx.fillStyle = 'rgba(50,50,50,0.95)';
+    ctx.strokeStyle=point.colour;
+    ctx.lineWidth=2;
+    const radius = 4;
+
+    ctx.beginPath();
+    ctx.moveTo(tooltipX+radius,tooltipY);
+    ctx.lineTo(tooltipX+tooltipWidth-radius,tooltipY);
+    ctx.quadraticCurveTo(tooltipX+tooltipWidth,tooltipY,tooltipX+tooltipWidth,tooltipY+radius);
+    ctx.lineTo(tooltipX+tooltipWidth,tooltipY+tooltipHeight-radius);
+    ctx.quadraticCurveTo(tooltipX+tooltipWidth,tooltipY+tooltipHeight,tooltipX+tooltipWidth-radius,tooltipY+tooltipHeight);
+    ctx.lineTo(tooltipX+radius,tooltipY+tooltipHeight);
+    ctx.quadraticCurveTo(tooltipX,tooltipY+tooltipHeight,tooltipX,tooltipY+tooltipHeight-radius);
+    ctx.lineTo(tooltipX,tooltipY+radius);
+    ctx.quadraticCurveTo(tooltipX,tooltipY,tooltipX+radius,tooltipY);
+    
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle='#fff';
+    ctx.textAlign='left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(typeLabel,tooltipX+padding,tooltipY+padding);
+    ctx.fillText(xLabel,tooltipX+padding,tooltipY+padding+lnHeight);
+    ctx.fillText(yLabel,tooltipX+padding,tooltipY+padding+lnHeight*2);
+    
+    ctx.fillStyle=point.colour;
+    ctx.strokeStyle='#fff';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.arc(point.px,point.py,7,0,Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+}
 
 updFunctions();
