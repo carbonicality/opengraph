@@ -409,14 +409,59 @@ document.getElementById('export').addEventListener('click',()=> {
     });
 });
 
-document.getElementById('save').addEventListener('click',()=> {
+document.getElementById('save').addEventListener('click',()=>{
     menuDrp.classList.remove('show');
-    //implement this soon
+    const sessionData = {
+        functions:functions.map(f => ({
+            latex:f.latex,
+            colour:f.colour,
+            index:f.index
+        })),
+        exps:captureState(),
+        scale:scale,
+        offsetX:offsetX,
+        offsetY:offsetY,
+        timestamp:Date.now()
+    };
+    const json = JSON.stringify(sessionData,null,2);
+    const blob = new Blob([json],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `opengraph-session-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 });
 
-document.getElementById('load').addEventListener('click',()=> {
+document.getElementById('load').addEventListener('click',()=>{
     menuDrp.classList.remove('show');
-    //implement this soon too
+    const input=document.createElement('input');
+    input.type='file';
+    input.accept='.json';
+    input.onchange=(e)=>{
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event)=>{
+            try {
+                const sessionData = JSON.parse(event.target.result);
+                if (sessionData.scale) scale = sessionData.scale;
+                if (sessionData.offsetX) offsetX = sessionData.offsetX;
+                if (sessionData.offsetY) offsetY = sessionData.offsetY;
+                if (sessionData.exps) {
+                    restoreState(sessionData.exps);
+                }
+                drawGraph();
+            } catch (error) {
+                alert('uh oh! error loading session file, please check the file format.');
+                console.error('error loading session file:',error);
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
 });
 
 // plotting implementation
