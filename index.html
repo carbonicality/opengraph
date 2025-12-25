@@ -20,6 +20,9 @@
                 <button class="toolbar-btn" id="menu-btn">
                     <span class="material-symbols-outlined">menu</span>
                 </button>
+                <button class="toolbar-btn" id="colpicker">
+                    <span class="material-symbols-outlined">colorize</span>
+                </button>
                 <div class="tb-spacer"></div>
                 <button class="toolbar-btn">
                     <span class="material-symbols-outlined">undo</span>
@@ -40,6 +43,33 @@
                 <div class="menu-item" id="load">
                     <span class="material-symbols-outlined">folder_open</span>
                     <span>Load session</span>
+                </div>
+            </div>
+            <div class="colpicker-pnl" id="colpicker-pnl">
+                <div class="colpicker-tl">Select function</div>
+                <div class="colpicker-funcs" id="colpicker-funcs"></div>
+                <div class="colpicker-presets" id="colpreset-section" style="display:none;">
+                    <div class="colpicker-tl">Choose colour</div>
+                    <div class="colpreset-grid">
+                        <!--i asked AI to make me these colour things-->
+                        <div class="colpreset" style="background-color: #2d70b3;" data-color="#2d70b3"></div>
+                        <div class="colpreset" style="background-color: #e74c3c;" data-color="#e74c3c"></div>
+                        <div class="colpreset" style="background-color: #27ae60;" data-color="#27ae60"></div>
+                        <div class="colpreset" style="background-color: #f39c12;" data-color="#f39c12"></div>
+                        <div class="colpreset" style="background-color: #9b59b6;" data-color="#9b59b6"></div>
+                        <div class="colpreset" style="background-color: #1abc9c;" data-color="#1abc9c"></div>
+                        <div class="colpreset" style="background-color: #e67e22;" data-color="#e67e22"></div>
+                        <div class="colpreset" style="background-color: #34495e;" data-color="#34495e"></div>
+                        <div class="colpreset" style="background-color: #c0392b;" data-color="#c0392b"></div>
+                        <div class="colpreset" style="background-color: #16a085;" data-color="#16a085"></div>
+                        <div class="colpreset" style="background-color: #d35400;" data-color="#d35400"></div>
+                        <div class="colpreset" style="background-color: #8e44ad;" data-color="#8e44ad"></div>
+                        <div class="colpreset" style="background-color: #2980b9;" data-color="#2980b9"></div>
+                        <div class="colpreset" style="background-color: #f1c40f;" data-color="#f1c40f"></div>
+                        <div class="colpreset" style="background-color: #95a5a6;" data-color="#95a5a6"></div>
+                        <div class="colpreset" style="background-color: #7f8c8d;" data-color="#7f8c8d"></div>
+                    </div>
+                    <input type="color" class="custom-col-in" id="custom-col-in">
                 </div>
             </div>
             <div class="exp" id="exp">

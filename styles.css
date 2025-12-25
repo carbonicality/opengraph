@@ -764,3 +764,124 @@ div[class*="alternative"] .MLK__keycap,
     font-weight:400;
     letter-spacing:0.01em;
 }
+
+/*colour picker stuff*/
+.colpicker-pnl {
+    position:absolute;
+    top:44px;
+    right:8px;
+    background:#fff;
+    border:1px solid rgba(0,0,0,0.08);
+    border-radius: 6px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.02), 0 4px 6px rgba(0,0,0,0.04), 0 12px 24px rgba(0,0,0,0.08);
+    padding: 12px;
+    display: none;
+    z-index:100;
+    animation:drpIn 0.12s cubic-bezier(0.16,1,0.3,1);
+    min-width:200px;
+}
+
+.colpicker-pnl.show {
+    display: block;
+}
+
+.colpicker-tl {
+    font-size: 11px;
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.colpicker-funcs {
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    max-height:300px;
+    overflow-y:auto;
+}
+
+.colpicker-item {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px;
+    border-radius:4px;
+    cursor:pointer;
+    transition:background 0.1s; /* vscode WHY is background red.*/
+}
+
+.colpicker-item:hover {
+    background:rgba(0,0,0,0.03);
+}
+
+.colpicker-item .exp-num {
+    font-size:11px;
+    font-weight:500;
+    color: #999;
+    width: 20px;
+}
+
+.colpicker-item .colswatch {
+    width:24px;
+    height:24px;
+    border-radius:4px;
+    border:2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.1);
+    cursor:pointer;
+    transition:transform 0.1s;
+}
+
+.colpicker-item .colswatch:hover {
+    transform: scale(1.1);
+}
+
+.colpicker-item .func-preview {
+    flex:1;
+    color:#333;
+    overflow:hidden;
+    font-family:'mathjax-newcm',serif;
+    font-size:14px;
+    font-style:italic;
+    font-weight:600;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.colpicker-presets {
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px solid rgba(0,0,0,0.06);
+}
+
+.colpreset-grid {
+    display:grid;
+    grid-template-columns:repeat(8,1fr);
+    gap:6px;
+    margin-top:8px;
+}
+
+.colpreset {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 4px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.colpreset:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
+}
+
+.custom-col-in {
+    width: 100%;
+    height: 32px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 8px;
+}

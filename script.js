@@ -330,11 +330,11 @@ document.getElementById('exp').addEventListener('click',(e) => {
 });
 
 //toolbar btn handling
-document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
-    btn.addEventListener('click',() => {
+document.querySelectorAll('.toolbar-btn').forEach((btn,idx)=> {
+    btn.addEventListener('click',()=> {
         if (idx === 0) {
             const expContainer = document.getElementById('exp');
-            const lastItem = expContainer.lastElementChild;
+            const lastItem= expContainer.lastElementChild;
             document.querySelectorAll('.exp-item').forEach(i => i.classList.remove('active'));
             lastItem.classList.add('active');
             lastItem.querySelector('math-field').focus();
@@ -356,13 +356,13 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx) => {
             expContainer.appendChild(newItem);
             sflListeners();
             saveState();
-        } else if (idx ===1) {
-            //menu btn, implemented outside of here
-        } else if (idx ===2) {
-            //diddyblud undo.
+        } else if (idx === 1) {
+            //menu btn
+        } else if (idx === 2) {
+            //colpicker btn
+        } else if (idx === 3) {
             undo();
-        } else if (idx===3) {
-            //diddyblud redo.
+        } else if (idx === 4) {
             redo();
         }
     });
@@ -1263,6 +1263,85 @@ function drawTooltip(point) {
     ctx.arc(point.px,point.py,7,0,Math.PI*2);
     ctx.fill();
     ctx.stroke();
+}
+
+//colpicker functionality
+const colpickerBtn = document.getElementById('colpicker');
+const colpickerPnl = document.getElementById('colpicker-pnl');
+const colpickerFuncs = document.getElementById('colpicker-funcs');
+const colpickerPS = document.getElementById('colpreset-section');
+const customColInp = document.getElementById('custom-col-in');
+
+colpickerBtn.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    menuDrp.classList.remove('show');
+    colpickerFuncs.innerHTML = '';
+    const expItems = document.querySelectorAll('.exp-item');
+    expItems.forEach((item,idx)=> {
+        if (item === document.getElementById('exp').lastElementChild) return;
+        const mathField = item.querySelector('math-field');
+        if (!mathField || !mathField.value) return;
+        const func = functions.find(f => f.index === idx);
+        if (!func) return;
+        const funcItem = document.createElement('div');
+        funcItem.className = 'colpicker-item';
+        funcItem.innerHTML = `
+        <span class="exp-num">${idx+1}</span>
+        <div class="colswatch" style="background-color:${func.colour};"></div>
+        <div class="func-preview">${mathField.value}</div>`;
+        funcItem.addEventListener('click',()=>{
+            selFuncIdx = idx;
+            colpickerPS.style.display='block';
+            document.querySelectorAll('.colpicker-item').forEach(i => {
+                i.style.background='';
+            });
+            funcItem.style.background='rgba(45,112,179,0.08)';
+        });
+        colpickerFuncs.appendChild(funcItem);
+    });
+    colpickerPnl.classList.toggle('show');
+    colpickerPS.style.display ='none';
+    selFuncIdx=null;
+});
+
+document.addEventListener('click',(e)=> {
+    if (!colpickerPnl.contains(e.target) && e.target !== colpickerBtn) {
+        colpickerPnl.classList.remove('show');
+    }
+});
+
+document.querySelectorAll('.colpreset').forEach(preset => {
+    preset.addEventListener('click',()=> {
+        if (selFuncIdx === null) return;
+        const colour = preset.getAttribute('data-color');
+        applyColFunc(selFuncIdx,colour);
+        colpickerPnl.classList.remove('show')
+    });
+});
+
+customColInp.addEventListener('change',(e)=>{
+    if (selFuncIdx === null) return;
+    applyColFunc(selFuncIdx,e.target.value);
+    colpickerPnl.classList.remove('show');
+});
+
+function applyColFunc(funcIndex,colour) {
+    const func = functions.find(f => f.index === funcIndex);
+    if (func) {
+        func.colour = colour;
+    }
+    const expItems = document.querySelectorAll('.exp-item');
+    const targetItem = expItems[funcIndex];
+    if (targetItem) {
+        const colourInd = targetItem.querySelector('.colour-ind');
+        if (colourInd) {
+            colourInd.style.backgroundColor = colour;
+        }
+    }
+    drawGraph();
+    if (!isRes) {
+        saveState();
+    }
 }
 
 updFunctions();
