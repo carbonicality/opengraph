@@ -13,6 +13,8 @@ let POIs = [];
 let hovPoint = null;
 let traceMode = false;
 let tracePoint = null;
+let params = {};
+let paramListeners =[];
 
 function resizeCanvas() {
     canvas.width = canvas.offsetWidth;
@@ -749,15 +751,35 @@ function updFunctions() {
                     expr = left;
                     hasVFunc = true;
                 }
-                else if (left === 'x' && !right.includes('y')){
+                else if (left ==='x' && !right.includes('y')) {
                     isVertical = true;
-                    verticalX = parseFloat(right);
-                    hasVFunc = !isNaN(verticalX);
+                    expr=right;
+                    try {
+                        const mathExpr = ltmExpr(right);
+                        const compiled = math.compile(mathExpr);
+                        const result = compiled.evaluate({});
+                        if (typeof result === 'number' && isFinite(result)) {
+                            verticalX = result;
+                            hasVFunc = true;
+                        }
+                    } catch (e) {
+                        console.log("error eval vertical line:",e);
+                    }
                 }
-                else if (right === 'x' && !left.includes('y')) {
-                    isVertical = true;
-                    verticalX = parseFloat(left);
-                    hasVFunc = !isNaN(verticalX);
+                else if(right==='x' && !left.includes('y')) {
+                    isVertical=true;
+                    expr=left;
+                    try{
+                        const mathExpr = ltmExpr(left);
+                        const compiled = math.compile(mathExpr);
+                        const result = compiled.evaluate({});
+                        if (typeof result === 'number' && isFinite(result)) {
+                            verticalX = result;
+                            hasVFunc= true;
+                        }
+                    } catch (e) {
+                        console.log("error eval vertical line:",e);
+                    }
                 } else {
                     try {
                         const leftM = ltmExpr(left);
@@ -790,7 +812,8 @@ function updFunctions() {
                     isVertical:true,
                     x:verticalX,
                     latex:latex,
-                    colour:getColourIdx(idx)
+                    colour:getColourIdx(idx),
+                    verticalExpr:expr
                 });
                 if (colourInd) colourInd.classList.remove('hidden');
                 return;
@@ -815,6 +838,7 @@ function updFunctions() {
         }
     });
     drawGraph();
+    updParamsPnl();
     if (!isRes) {
         saveState();
     }
@@ -844,7 +868,20 @@ function plotFuncs() {
         ctx.strokeStyle = func.colour;
         ctx.lineWidth = 2.5;
         if (func.isVertical) {
-            const px = centerX + (func.x * scale);
+            let xValue = func.x;
+            if (func.verticalExpr) {
+                try {
+                    const mathExpr = ltmExpr(func.verticalExpr);
+                    const compiled = math.compile(mathExpr);
+                    const result = compiled.evaluate({});
+                    if (typeof result === 'number' && isFinite(result)) {
+                        xValue = result;
+                    }
+                } catch (e) {
+                    // use og x
+                }
+            }
+            const px = centerX + (xValue*scale);
             if (px >= 0 && px <= width) {
                 ctx.beginPath();
                 ctx.moveTo(px,0);
@@ -1535,5 +1572,104 @@ function applyColFunc(funcIndex,colour) {
         saveState();
     }
 }
+
+//params section stuff
+const paramsTgl = document.getElementById('params-tgl');
+const paramsSec = document.querySelector('.params-sec');
+paramsTgl.addEventListener('click',() => {
+    paramsSec.classList.toggle('collapsed');
+    if (paramsSec.classList.contains('collapsed')) {
+        paramsTgl.innerHTML = '<span class="material-symbols-outlined">expand_less</span>';
+    } else {
+        paramsTgl.innerHTML = '<span class="material-symbols-outlined">expand_more</span>';
+    }
+});
+
+function findParams(latex) {
+    const params = new Set();
+    const matches = latex.match(/(?<![a-zA-Z])([a-uw-z]|[A-Z])(?![a-zA-Z])/g);
+    if (matches) {
+        matches.forEach(match => {
+            if (!['x','y','e','i','E','I'].includes(match)) {
+                params.add(match);
+            }
+        });
+    }
+    return Array.from(params);
+}
+
+function updParamsPnl() {
+    const paramsCont = document.getElementById('params-content');
+    const allParams = new Set();
+    functions.forEach(func => {
+        const params = findParams(func.latex);
+        params.forEach(p => allParams.add(p));
+    });
+    Object.keys(params).forEach(param => {
+        if (!allParams.has(param)) {
+            delete params[param];
+        }
+    });
+    allParams.forEach(param => {
+        if (!(param in params)) {
+            params[param]=1;
+        }
+    });
+    paramsCont.innerHTML = '';
+    if (allParams.size===0) {
+        paramsCont.innerHTML = '<div class="empty-params">No parameters found, try adding variables into your equations!</div>';
+        return;
+    }
+    paramListeners.forEach(ls =>{
+        ls.element.removeEventListener('input',ls.handler);
+    });
+    allParams.forEach(param => {
+        const paramItem = document.createElement('div');
+        paramItem.className ='param-item';
+        const val =params[param];
+        paramItem.innerHTML = `
+        <div class="param-hdr">
+            <span class="param-name">${param}</span>
+            <input type="number" class="param-val" value="${val.toFixed(2)}" step="0.01">
+        </div>
+        <div class="param-scontainer">
+            <span class="param-min">-10</span>
+            <input type="range" class="param-slider" min="-10" max="10" step="0.01" value="${val}">
+            <span class="param-max">10</span>
+        </div>`;
+        paramsCont.appendChild(paramItem);
+        const slider = paramItem.querySelector('.param-slider');
+        const valInput = paramItem.querySelector('.param-val');
+        const sliderHandler = (e)=>{
+            const newValue = parseFloat(e.target.value);
+            params[param]=newValue;
+            valInput.value=newValue.toFixed(2);
+            drawGraph();
+        };
+        const valHandler = (e)=>{
+            let newValue = parseFloat(e.target.value);
+            if (isNaN(newValue)) newValue = 0;
+            params[param]=newValue;
+            slider.value=Math.max(-10,Math.min(10,newValue));
+            drawGraph();
+        };
+        slider.addEventListener('input',sliderHandler);
+        valInput.addEventListener('input',valHandler);
+        paramListeners.push(
+            {element:slider,handler:sliderHandler},
+            {element:valInput,handler:valHandler}
+        );
+    });
+}
+
+const ogLtmExpr = ltmExpr;
+ltmExpr = function(expr) {
+    let result = ogLtmExpr(expr);
+    Object.keys(params).forEach(param=>{
+        const regex=new RegExp(`(?<![a-zA-Z])${param}(?![a-zA-Z])`, 'g');
+        result=result.replace(regex,`(${params[param]})`);
+    });
+    return result;
+};
 
 updFunctions();
