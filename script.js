@@ -15,6 +15,7 @@ let traceMode = false;
 let tracePoint = null;
 let params = {};
 let paramListeners =[];
+let showGrid = true;
 
 function resizeCanvas() {
     canvas.width = canvas.offsetWidth;
@@ -112,35 +113,37 @@ function drawGraph() {
     const centerX = width /2 + offsetX;
     const centerY = height /2 + offsetY;
     const gridStep = getGridStep();
-    const gridSize = scale * gridStep;
-    const sGridSize = gridSize / 5;
-    ctx.strokeStyle = '#f0f0f0';
-    ctx.lineWidth = 1;
-    for (let x= centerX % sGridSize; x <width; x += sGridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x,0);
-        ctx.lineTo(x,height);
-        ctx.stroke();
-    }
-    for (let y = centerY % sGridSize; y < height; y += sGridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0,y);
-        ctx.lineTo(width,y);
-        ctx.stroke();
-    }
-    ctx.strokeStyle = '#d5d5d5';
-    ctx.lineWidth = 1.2;
-    for (let x = centerX % gridSize; x < width; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x,0);
-        ctx.lineTo(x,height);
-        ctx.stroke();
-    }
-    for (let y = centerY % gridSize; y <height; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0,y);
-        ctx.lineTo(width,y);
-        ctx.stroke();
+    const gridSize = scale*gridStep;
+    if (showGrid) { 
+        const sGridSize = gridSize / 5;
+        ctx.strokeStyle = '#f0f0f0';
+        ctx.lineWidth = 1;
+        for (let x= centerX % sGridSize; x <width; x += sGridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x,0);
+            ctx.lineTo(x,height);
+            ctx.stroke();
+        }
+        for (let y = centerY % sGridSize; y < height; y += sGridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0,y);
+            ctx.lineTo(width,y);
+            ctx.stroke();
+        }
+        ctx.strokeStyle = '#d5d5d5';
+        ctx.lineWidth = 1.2;
+        for (let x = centerX % gridSize; x < width; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x,0);
+            ctx.lineTo(x,height);
+            ctx.stroke();
+        }
+        for (let y = centerY % gridSize; y <height; y += gridSize) {
+           ctx.beginPath();
+            ctx.moveTo(0,y);
+            ctx.lineTo(width,y);
+            ctx.stroke();
+        }
     }
     ctx.strokeStyle ='#888';
     ctx.lineWidth=2;
@@ -154,31 +157,33 @@ function drawGraph() {
     ctx.moveTo(0,centerY);
     ctx.lineTo(width,centerY);
     ctx.stroke();
-    ctx.fillStyle = '#666';
-    ctx.font = '13px Ubuntu';
-    //xlabels 
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    for (let x= centerX % gridSize; x < width; x += gridSize) {
-        const unit = (x - centerX) /scale;
-        if (Math.abs(unit) > 0.0001) {
-            const label = formatNum(unit,gridStep);
-            ctx.fillText(label,x,centerY+6);
+    if (showGrid) {
+        ctx.fillStyle = '#666';
+        ctx.font = '13px Ubuntu';
+        //xlabels 
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        for (let x= centerX % gridSize; x < width; x += gridSize) {
+            const unit = (x - centerX) /scale;
+            if (Math.abs(unit) > 0.0001) {
+                const label = formatNum(unit,gridStep);
+                ctx.fillText(label,x,centerY+6);
+            }
         }
-    }
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    //ylabels
-    for (let y = centerY % gridSize; y < height; y += gridSize) {
-        const unit = (centerY - y)/scale;
-        if (Math.abs(unit) > 0.0001) {
-            const label = formatNum(unit,gridStep);
-            ctx.fillText(label,centerX - 8, y);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        //ylabels
+        for (let y = centerY % gridSize; y < height; y += gridSize) {
+            const unit = (centerY - y)/scale;
+            if (Math.abs(unit) > 0.0001) {
+                const label = formatNum(unit,gridStep);
+                ctx.fillText(label,centerX - 8, y);
+            }
         }
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('0',centerX-8,centerY+6);
     }
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText('0',centerX-8,centerY+6);
 }
 
 document.querySelectorAll('.control-btn').forEach((btn,idx) => {
@@ -1671,5 +1676,21 @@ ltmExpr = function(expr) {
     });
     return result;
 };
+
+document.getElementById('grid-tgl').addEventListener('click',()=>{
+    menuDrp.classList.remove('show');
+    showGrid = !showGrid;
+    const gridTgl = document.getElementById('grid-tgl');
+    const icon= gridTgl.querySelector('.material-symbols-outlined');
+    const text=gridTgl.querySelector('span:not(.material-symbols-outlined)');
+    if (showGrid) {
+        icon.textContent='grid_on';
+        text.textContent = 'Hide grid';
+    } else {
+        icon.textContent = 'grid_on';
+        text.textContent = 'Show grid';
+    }
+    drawGraph();
+});
 
 updFunctions();
