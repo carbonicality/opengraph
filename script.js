@@ -726,7 +726,6 @@ function updFunctions() {
         if (!mathField) return;
         if (item === document.getElementById('exp').lastElementChild) return;
         let latex = mathField.value;
-        console.log(latex);
         const colourInd = item.querySelector('.colour-ind');
         if (!latex || latex.trim() === '') {
             if (colourInd) colourInd.classList.add('hidden');
