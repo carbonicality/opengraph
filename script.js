@@ -11,6 +11,8 @@ const MAX_HIST = 50;
 let isRes = false;
 let POIs = [];
 let hovPoint = null;
+let traceMode = false;
+let tracePoint = null;
 
 function resizeCanvas() {
     canvas.width = canvas.offsetWidth;
@@ -202,10 +204,10 @@ canvas.addEventListener('mousedown',(e) => {
     canvas.style.cursor = 'grabbing';
 });
 
-canvas.addEventListener('mousemove',(e)=> {
+canvas.addEventListener('mousemove',(e) => {
     if (isDrg) {
-        const dx = e.clientX - lastX;
-        const dy = e.clientY - lastY;
+        const dx = e.clientX-lastX;
+        const dy= e.clientY-lastY;
         offsetX += dx;
         offsetY += dy;
         lastX = e.clientX;
@@ -215,20 +217,76 @@ canvas.addEventListener('mousemove',(e)=> {
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX-rect.left;
         const mouseY = e.clientY-rect.top;
-        hovPoint = null;
-        const hovRadius = 15;
+        const centerX = canvas.width/2+offsetX;
+        const centerY=canvas.height/2+offsetY;
+        hovPoint=null;
+        const hovRadius=15;
         for (let poi of POIs) {
-            const dx=mouseX-poi.px;
-            const dy=mouseY-poi.py;
-            const dist =Math.sqrt(dx*dx + dy*dy);
+            const dx = mouseX-poi.px;
+            const dy = mouseY-poi.py;
+            const dist = Math.sqrt(dx*dx+dy*dy);
             if (dist <= hovRadius) {
-                hovPoint = poi;
-                canvas.style.cursor = 'pointer';
+                hovPoint=poi;
+                canvas.style.cursor='pointer';
                 drawGraph();
                 return;
             }
         }
-        if (canvas.style.cursor === 'pointer') {
+        if (traceMode) {
+            let cPoint = null;
+            let minDist = 20;
+            const mouseXCoord = (mouseX-centerX)/scale;
+            const mouseYCoord = (centerY-mouseY)/scale;
+            functions.forEach(func => {
+                if (func.isVertical) {
+                    const px = centerX+func.x*scale;
+                    const distX = Math.abs(mouseX-px);
+                    if (distX<minDist) {
+                        minDist = distX;
+                        cPoint = {
+                            x:func.x,
+                            y:mouseYCoord,
+                            px:px,
+                            py:mouseY,
+                            colour:func.colour,
+                            funcIdx:func.index,
+                            latex:func.latex
+                        };
+                    }
+                    return;
+                }
+                if (func.isImpl) return;
+                try {
+                    const y=func.expr.evaluate({x:mouseXCoord});
+                    if (typeof y==='number'&&isFinite(y)) {
+                        const py = centerY-y*scale;
+                        const dist=Math.abs(mouseY-py);
+                        if (dist<minDist) {
+                            minDist = dist;
+                            cPoint = {
+                                x:mouseXCoord,
+                                y:y,
+                                px:mouseX,
+                                py:py,
+                                colour:func.colour,
+                                funcIdx:func.index,
+                                latex:func.latex
+                            };
+                        }
+                    }
+                } catch (e) {}
+            });
+            if (cPoint) {
+                tracePoint=cPoint;
+                canvas.style.cursor='crosshair';
+            } else {
+                tracePoint=null;
+                canvas.style.cursor='default';
+            }
+            drawGraph();
+            return;
+        }
+        if (canvas.style.cursor==='pointer' || canvas.style.cursor==='crosshair') {
             canvas.style.cursor='default';
             drawGraph();
         }
@@ -361,8 +419,19 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx)=> {
         } else if (idx === 2) {
             //colpicker btn
         } else if (idx === 3) {
-            undo();
+            traceMode = !traceMode;
+            const traceBtn = document.getElementById('trace-btn');
+            if (traceMode) {
+                traceBtn.style.background='rgba(45,112,179,0.2)';
+            } else {
+                traceBtn.style.background='transparent';
+                tracePoint=null;
+                canvas.style.cursor='default';
+                drawGraph();
+            }
         } else if (idx === 4) {
+            undo();
+        } else if (idx === 5) {
             redo();
         }
     });
@@ -957,6 +1026,9 @@ const ogDrawGraph = drawGraph;
 drawGraph = function() {
     ogDrawGraph();
     plotFuncs();
+    if (traceMode && tracePoint) {
+        drawTrace();
+    }
 };
 
 //handle custom kb toggle button too
@@ -1168,8 +1240,8 @@ function redo() {
 
 function updURButtons() {
     const toolbarBtns = document.querySelectorAll('.toolbar-btn');
-    const undoBtn = toolbarBtns[2];
-    const redoBtn = toolbarBtns[3];
+    const undoBtn = toolbarBtns[4];
+    const redoBtn = toolbarBtns[5];
     if (undoBtn) {
         if (histIdx >0) {
             undoBtn.style.opacity = '1';
@@ -1263,6 +1335,92 @@ function drawTooltip(point) {
     ctx.arc(point.px,point.py,7,0,Math.PI*2);
     ctx.fill();
     ctx.stroke();
+}
+
+function drawTrace() {
+    if (!tracePoint) return;
+    const centerX = canvas.width/2+offsetX;
+    const centerY = canvas.height/2+offsetY;
+    ctx.strokeStyle=tracePoint.colour;
+    ctx.lineWidth=1;
+
+    ctx.setLineDash([3,3]);
+    ctx.beginPath();
+    ctx.moveTo(tracePoint.px,tracePoint.py);
+    ctx.lineTo(tracePoint.px,centerY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(tracePoint.px,tracePoint.py);
+    ctx.lineTo(centerX,tracePoint.py);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle=tracePoint.colour;
+    ctx.strokeStyle='#fff';
+    ctx.lineWidth=3;
+
+    ctx.beginPath();
+    ctx.arc(tracePoint.px,tracePoint.py,6,0,Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle='#000';
+    ctx.font='bold 12px Ubuntu';
+    ctx.textAlign='center';
+
+    ctx.fillText(tracePoint.x.toFixed(3),tracePoint.px,centerY+20);
+    ctx.save();
+    ctx.translate(centerX-30,tracePoint.py);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText(tracePoint.y.toFixed(3),0,0);
+    ctx.restore();
+    drawTraceTT(tracePoint);
+}
+
+function drawTraceTT(point) {
+    const padding = 10;
+    const lnHeight = 20;
+    const xLabel = `x = ${point.x.toFixed(4)}`;
+    const yLabel = `y = ${point.y.toFixed(4)}`;
+    ctx.font = '14px Ubuntu';
+    const xWidth = ctx.measureText(xLabel).width;
+    const yWidth = ctx.measureText(yLabel).width;
+    const maxWidth = Math.max(xWidth,yWidth);
+    const tooltipWidth = maxWidth+padding*2;
+    const tooltipHeight = lnHeight*2+padding*2;
+    let tooltipX = point.px+20;
+    let tooltipY = point.py-tooltipHeight-20;
+    if (tooltipX+tooltipWidth>canvas.width-10) {
+        tooltipX=point.px-tooltipWidth-20;
+    }
+    if (tooltipY < 10) {
+        tooltipY = point.py + 20;
+    }
+    ctx.fillStyle = 'rgba(30,30,30,0.95)';
+    ctx.strokeStyle = point.colour;
+    ctx.lineWidth = 2;
+    const radius=6;
+
+    ctx.beginPath();
+    ctx.moveTo(tooltipX+radius,tooltipY);
+    ctx.lineTo(tooltipX+tooltipWidth-radius,tooltipY);
+    ctx.quadraticCurveTo(tooltipX+tooltipWidth,tooltipY,tooltipX+tooltipWidth,tooltipY+radius);
+    ctx.lineTo(tooltipX+tooltipWidth,tooltipY+tooltipHeight-radius);
+    ctx.quadraticCurveTo(tooltipX+tooltipWidth,tooltipY+tooltipHeight,tooltipX+tooltipWidth-radius,tooltipY+tooltipHeight);
+    ctx.lineTo(tooltipX+radius,tooltipY+tooltipHeight);
+    ctx.quadraticCurveTo(tooltipX,tooltipY+tooltipHeight,tooltipX,tooltipY+tooltipHeight-radius);
+    ctx.lineTo(tooltipX,tooltipY+radius);
+    ctx.quadraticCurveTo(tooltipX,tooltipY,tooltipX+radius,tooltipY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.fillStyle='#fff';
+    ctx.textAlign='left';
+    ctx.textBaseline='top';
+    ctx.font='bold 14px Ubuntu';
+    ctx.fillText(xLabel,tooltipX+padding,tooltipY+padding);
+    ctx.fillText(yLabel,tooltipX+padding,tooltipY+padding+lnHeight);
 }
 
 //colpicker functionality
