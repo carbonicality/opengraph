@@ -551,15 +551,49 @@ function ltmExpr(expr) {
         .replace(/\\sin/g, 'sin')
         .replace(/\\cos/g, 'cos')
         .replace(/\\tan/g, 'tan')
+        .replace(/\\cot/g, 'cot')
+        .replace(/\\sec/g, 'sec')
+        .replace(/\\csc/g, 'csc')
+        .replace(/\\arcsin/g, 'asin')
+        .replace(/\\arccos/g, 'acos')
+        .replace(/\\arctan/g, 'atan')
+        .replace(/\\sinh/g, 'sinh')
+        .replace(/\\cosh/g, 'cosh')
+        .replace(/\\tanh/g, 'tanh')
         .replace(/\\ln/g, 'log')
         .replace(/\\log/g, 'log10')
         .replace(/\\pi/g, 'pi')
-        .replace(/\\left\(|\\right\)/g, '')
+        .replace(/\\phi/g, 'phi')
+        .replace(/\\theta/g, 'theta')
+        .replace(/\\alpha/g, 'alpha')
+        .replace(/\\beta/g, 'beta')
+        .replace(/\\gamma/g, 'gamma')
+        .replace(/\\delta/g, 'delta')
+        .replace(/\\epsilon/g, 'epsilon')
+        .replace(/\\tau/g, 'tau')
+        .replace(/\\left\(/g, '(')
+        .replace(/\\right\)/g, ')')
         .replace(/\\left\||\\right\|/g, 'abs')
+        .replace(/\\left\[|\\right\]/g, '')
+        .replace(/\\floor/g, 'floor')
+        .replace(/\\ceil/g, 'ceil')
+        .replace(/\\max/g, 'max')
+        .replace(/\\min/g, 'min')
         .replace(/\{|\}/g, '');
     mathExpr = mathExpr.replace(/(\d)([a-zA-Z])/g,'$1*$2');
     mathExpr = mathExpr.replace(/\)([a-zA-Z\d])/g, ')*$1');
-    mathExpr = mathExpr.replace(/([a-zA-Z\d])\(/g, '$1*(');
+    const funcNames = ['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'asin', 'acos', 'atan', 
+                      'sinh', 'cosh', 'tanh', 'log', 'log10', 'sqrt', 'abs', 'floor', 
+                      'ceil', 'max', 'min', 'nthRoot']; // asked AI for this stuff
+    mathExpr = mathExpr.replace(/([a-zA-Z\d])\(/g,(match,p1,offset)=> {
+        for (let func of funcNames) {
+            const startPos=offset-(func.length-p1.length);
+            if (startPos >= 0 && mathExpr.substring(startPos,offset+p1.length)===func) {
+                return match;
+            }
+        }
+        return p1+'*(';
+    });
     return mathExpr;
 }
 
@@ -692,6 +726,7 @@ function updFunctions() {
         if (!mathField) return;
         if (item === document.getElementById('exp').lastElementChild) return;
         let latex = mathField.value;
+        console.log(latex);
         const colourInd = item.querySelector('.colour-ind');
         if (!latex || latex.trim() === '') {
             if (colourInd) colourInd.classList.add('hidden');
