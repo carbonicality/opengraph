@@ -291,6 +291,47 @@ canvas.addEventListener('mousemove',(e) => {
                 tracePoint=null;
                 canvas.style.cursor='default';
             }
+            if (func.isPolar) {
+                let cTheta = null;
+                let minDist = 20;
+                for (let theta = 0; theta<=Math.PI*4;theta+=0.05) {
+                    try {
+                        const r = func.expr.evaluate({theta:theta,θ:theta});
+                        if (!isFinite(r)) continue;
+                        const x = r*Math.cos(theta);
+                        const y = r*Math.sin(theta);
+                        const px = centerX+x*scale;
+                        const py = centerY-y*scale;
+                        const dist = Math.sqrt(Math.pow(mouseX-px,2)+Math.pow(mouseY-py,2));
+                        if (dist<minDist) {
+                            minDist = dist;
+                            cTheta = theta;
+                        }
+                    } catch (e) {}
+                }
+                if (cTheta !== null) {
+                    try {
+                        const r = func.expr.evaluate({theta:cTheta,θ:cTheta});
+                        const x = r*Math.cos(cTheta);
+                        const y = r*Math.sin(cTheta);
+                        const px=centerX+x*scale;
+                        const py=centerY-y*scale;
+                        cPoint = {
+                            x:x,
+                            y:y,
+                            px:px,
+                            py:py,
+                            colour:func.colour,
+                            funcIdx:func.index,
+                            latex:func.latex,
+                            isPolar:true,
+                            theta:cTheta,
+                            r:r
+                        };
+                    } catch (e) {}
+                }
+                return;
+            }
             drawGraph();
             return;
         }
@@ -587,6 +628,7 @@ function ltmExpr(expr) {
         .replace(/\\ceil/g, 'ceil')
         .replace(/\\max/g, 'max')
         .replace(/\\min/g, 'min')
+        .replace(/θ/g, 'theta')
         .replace(/\{|\}/g, '');
     mathExpr = mathExpr.replace(/(\d)([a-zA-Z])/g,'$1*$2');
     mathExpr = mathExpr.replace(/\)([a-zA-Z\d])/g, ')*$1');
@@ -749,6 +791,44 @@ function updFunctions() {
                 const parts = latex.split('=');
                 const left = parts[0].trim();
                 const right = parts[1].trim();
+                if (left === 'r' && !right.includes('x') && !right.includes('y')) {
+                    try {
+                        const mathExpr=ltmExpr(right);
+                        const compiled=math.compile(mathExpr);
+                        functions.push({
+                            index:idx,
+                            isPolar:true,
+                            expr:compiled,
+                            latex:latex,
+                            colour:getColourIdx(idx)
+                        });
+                        if (colourInd) colourInd.classList.remove('hidden');
+                        return;
+                    } catch (e) {
+                        console.log("error parsing polar eq:",e);
+                        if (colourInd) colourInd.classList.add('hidden');
+                        return;
+                    }
+                }
+                else if (right === 'r' && !left.includes('x') && !left.includes('y')) {
+                    try {
+                        const mathExpr = ltmExpr(left);
+                        const compiled = math.compile(mathExpr);
+                        functions.push({
+                            index:idx,
+                            isPolar:true,
+                            expr:compiled,
+                            latex:latex,
+                            colour:getColourIdx(idx)
+                        });
+                        if (colourInd) colourInd.classList.remove('hidden');
+                        return;
+                    } catch (e) {
+                        console.log("error parsing polar eq:",e);
+                        if (colourInd) colourInd.classList.add('hidden');
+                        return;
+                    }
+                }
                 if (left === 'y') {
                     expr = right;
                     hasVFunc = true;
@@ -864,6 +944,57 @@ function getColourIdx(idx) {
     return colours[idx % colours.length];
 }
 
+function plotPolar(func) {
+    const width=canvas.width;
+    const height=canvas.height;
+    const centerX=width/2+offsetX;
+    const centerY=height/2+offsetY;
+    ctx.strokeStyle=func.colour;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    let firstPoint = true;
+    const thetaStep = 0.01;
+    for (let theta=0;theta<=Math.PI*4;theta+=thetaStep) {
+        try {
+            const r = func.expr.evaluate({theta:theta,θ:theta}); //asked AI for some help here
+            if (typeof r !== 'number' || !isFinite(r)) {
+                firstPoint=true;
+                continue;
+            }
+            const x=r*Math.cos(theta);//asked AI for some help here too
+            const y=r*Math.sin(theta);
+            const px = centerX+x*scale;
+            const py = centerY-y*scale;
+            if (Math.abs(px)<width*3&&Math.abs(py)<height*3) {
+                if (firstPoint) {
+                    ctx.moveTo(px,py);
+                    firstPoint=false;
+                } else {
+                    ctx.lineTo(px,py);
+                }
+            } else {
+                firstPoint=true;
+            }
+        } catch (e) {
+            firstPoint=true;
+        }
+    }
+    ctx.stroke();
+    ctx.fillStyle=func.colour;
+    ctx.beginPath();
+    ctx.arc(centerX,centerY,4,0,Math.PI*2);
+    ctx.fill();
+    POIs.push({
+        x:0,
+        y:0,
+        px:centerX,
+        py:centerY,
+        type:'pole',
+        colour:func.colour,
+        funcIdx:func.index
+    });
+}
+
 function plotFuncs() {
     const width = canvas.width;
     const height = canvas.height;
@@ -871,6 +1002,10 @@ function plotFuncs() {
     const centerY = height/2 + offsetY;
     POIs = [];
     functions.forEach(func => {
+        if (func.isPolar) {
+            plotPolar(func);
+            return;
+        }
         ctx.strokeStyle = func.colour;
         ctx.lineWidth = 2.5;
         if (func.isVertical) {
@@ -1364,11 +1499,24 @@ document.addEventListener('keydown',(e) => {
 function drawTooltip(point) {
     const padding=8;
     const lnHeight = 18;
-    const xLabel = `x: ${point.x.toFixed(3)}`;
-    const yLabel = `y: ${point.y.toFixed(3)}`;
+    let xLabel = `x: ${point.x.toFixed(3)}`;
+    let yLabel = `y: ${point.y.toFixed(3)}`;
     let typeLabel = point.type.replace('-',' ');
     if (point.type === 'inter') {
         typeLabel = `Intersection (f${point.funcIdx+1} ∩ f${point.func2Idx+1})`;
+    }
+    if (point.isPolar) {
+        xLabel = `r: ${point.r.toFixed(3)}`;
+        yLabel = `θ: ${point.theta.toFixed(3)}`;
+        typeLabel = `(x: ${point.x.toFixed(2)}, y: ${point.y.toFixed(2)})`;
+    } else if (point.type === 'pole') {
+        typeLabel = 'Pole (origin)';
+        xLabel= `x: ${point.x.toFixed(3)}`;
+        yLabel= `y: ${point.y.toFixed(3)}`;
+    } else {
+        xLabel=`x: ${point.x.toFixed(3)}`;
+        yLabel = `y: ${point.y.toFixed(3)}`;
+        typeLabel = point.type.replace('-',' ');
     }
     ctx.font='13px Ubuntu';
     const xWidth = ctx.measureText(xLabel).width;
