@@ -16,6 +16,7 @@ let tracePoint = null;
 let params = {};
 let paramListeners =[];
 let showGrid = true;
+let inters=[];
 
 function resizeCanvas() {
     canvas.width = canvas.offsetWidth;
@@ -1102,6 +1103,9 @@ const ogDrawGraph = drawGraph;
 drawGraph = function() {
     ogDrawGraph();
     plotFuncs();
+    findInters();
+    console.log('inters:',inters.length,inters);
+    drawInters();
     if (traceMode && tracePoint) {
         drawTrace();
     }
@@ -1362,7 +1366,10 @@ function drawTooltip(point) {
     const lnHeight = 18;
     const xLabel = `x: ${point.x.toFixed(3)}`;
     const yLabel = `y: ${point.y.toFixed(3)}`;
-    const typeLabel = point.type.replace('-',' ');
+    let typeLabel = point.type.replace('-',' ');
+    if (point.type === 'inter') {
+        typeLabel = `Intersection (f${point.funcIdx+1} ∩ f${point.func2Idx+1})`;
+    }
     ctx.font='13px Ubuntu';
     const xWidth = ctx.measureText(xLabel).width;
     const yWidth = ctx.measureText(yLabel).width;
@@ -1403,8 +1410,21 @@ function drawTooltip(point) {
     ctx.fillText(typeLabel,tooltipX+padding,tooltipY+padding);
     ctx.fillText(xLabel,tooltipX+padding,tooltipY+padding+lnHeight);
     ctx.fillText(yLabel,tooltipX+padding,tooltipY+padding+lnHeight*2);
+
+    if (point.type === 'inter') {
+        const gradient=ctx.createRadialGradient(point.px,point.py,0,point.px,point.py,10);
+        gradient.addColorStop(0,point.colour);
+        if (point.func2Idx !== undefined) {
+            const func2 = functions.find(f => f.index === point.func2Idx);
+            if (func2) {
+                gradient.addColorStop(1,func2.colour);
+            }
+        }
+        ctx.fillStyle=gradient;
+    } else {
+        ctx.fillStyle=point.colour;
+    }
     
-    ctx.fillStyle=point.colour;
     ctx.strokeStyle='#fff';
     ctx.lineWidth=2;
     ctx.beginPath();
@@ -1692,5 +1712,283 @@ document.getElementById('grid-tgl').addEventListener('click',()=>{
     }
     drawGraph();
 });
+
+function findInters() { // this function is GENUINELY huge
+    inters=[];
+    for (let i = 0; i<functions.length; i++) {
+        for (let j=i+1;j<functions.length;j++) {
+            const func1=functions[i];
+            const func2=functions[j];
+            if (func1.isImpl && func2.isImpl) {
+                const srchRange = canvas.width/scale*1.5;
+                const step =2;
+                for (let px =0; px <canvas.width; px += step) {
+                    for (let py=0;py<canvas.height;py+=step) {
+                        const centerX = canvas.width/2+offsetX;
+                        const centerY = canvas.height/2+offsetY;
+                        const x = (px-centerX)/scale;
+                        const y = (centerY-py)/scale;
+                        try {
+                            const diff1 = func1.leftExpr.evaluate({x:x,y:y})-func1.rightExpr.evaluate({x:x,y:y});
+                            const diff2 = func2.leftExpr.evaluate({x:x,y:y})-func2.rightExpr.evaluate({x:x,y:y});
+                            if (Math.abs(diff1)<0.1 && Math.abs(diff2) < 0.1) {
+                                let bestX = x,bestY = y;
+                                let bestErr = Math.abs(diff1) + Math.abs(diff2);
+                                for (let dx=-step/scale;dx<=step/scale;dx+=step/(scale*10)) {
+                                    for (let dy = -step/scale;dy<=step/scale;dy+=step/(scale*10)) {
+                                        const testX = x+dx;
+                                        const testY = y+dy;
+                                        const d1 = func1.leftExpr.evaluate({x:testX,y:testY})-func1.rightExpr.evaluate({x:testX,y:testY});
+                                        const d2 = func2.leftEXpr.evaluate({x:testX,y:testY})-func2.rightExpr.evaluate({x:testX,y:testY});
+                                        const err = Math.abs(d1) + Math.abs(d2);
+                                        if (err < bestErr) {
+                                            bestErr = err;
+                                            bestX = testX;
+                                            bestY = testY;
+                                        }
+                                    }
+                                }
+                                const isDupe = inters.some(int => {
+                                    Math.abs(int.x-bestX)<0.5&&Math.abs(int.y-bestY)<0.5
+                                });
+                                if (!isDupe && bestErr < 0.01) {
+                                    inters.push({
+                                        x:bestX,
+                                        y:bestY,
+                                        func1Idx:func1.index,
+                                        func2Idx:func2.index,
+                                        colour1:func1.colour,
+                                        colour2:func2.colour
+                                    });
+                                }
+                            }
+                        } catch (e) {}
+                    }
+                }
+                continue;
+            }
+            if (func1.isImpl && !func2.isImpl && !func2.isVertical) {
+                const srchRange=canvas.width/scale*1.5;
+                const step=0.1;
+                for(let x=-srchRange; x<=srchRange;x+=step) {
+                    try {
+                        const y= func2.expr.evaluate({x:x,y:y})-func1.rightExpr.evaluate({x:x,y:y});
+                        if (Math.abs(diff) < 0.1) {
+                            const isDupe = inters.some(int =>
+                                Math.abs(int.x-x)<0.1&&Math.abs(int.y-y)<0.1
+                            );
+                            if (!isDupe) {
+                                inters.push({
+                                    x:x,
+                                    y:y,
+                                    func1Idx:func1.index,
+                                    func2Idx:func2.index,
+                                    colour1:func1.colour,
+                                    colour2:func2.colour
+                                });
+                            }
+                        }
+                    } catch (e) {}
+                }
+                continue;
+            }
+            if (func1.isImpl && !func2.isImpl && !func2.isVertical) {
+                const srchRange=canvas.width/scale*1.5;
+                const step = 0.1;
+                for (let x=-srchRange; x<=srchRange;x+=step) {
+                    try {
+                        const y=func2.expr.evaluate({x:x});
+                        if (!isFinite(y)) continue;
+                        const diff = func1.leftExpr.evaluate({x:x,y:y}-func1.rightExpr.evaluate({x:x,y:y}));
+                        if (Math.abs(diff)<0.1) {
+                            const isDupe = inters.some(int =>
+                                Math.abs(int.x-x) < 0.1 && Math.abs(int.y-y)<0.1
+                            );
+                            if (!isDupe) {
+                                inters.push({
+                                    x:x,
+                                    y:y,
+                                    func1Idx:func1.index,
+                                    func2Idx:func2.index,
+                                    colour1:func1.colour,
+                                    colour2:func2.colour
+                                });
+                            }
+                        }
+                    } catch (e) {}
+                }
+                continue;
+            }
+            if (func2.isImpl && !func1.isImpl && !func1.isVertical) {
+                const srchRange = canvas.width/scale*1.5;
+                const step = 0.1;
+                for (let x = -srchRange;x<=srchRange;x+=step) {
+                    try {
+                        const y = func1.expr.evaluate({x:x});
+                        if (!isFinite(y)) continue;
+                        const diff = func2.leftExpr.evaluate({x:x,y:y})-func2.rightExpr.evaluate({x:x,y:y});
+                        if (Math.abs(diff)<0.1) {
+                            const isDupe = inters.some(int =>
+                                Math.abs(int.x-x)<0.1 && Math.abs(int.y-y)<0.1
+                            );
+                            if (!isDupe) {
+                                inters.push({
+                                    x:x,
+                                    y:y,
+                                    func1Idx:func1.index,
+                                    func2Idx:func2.index,
+                                    colour1:func1.colour,
+                                    colour2:func2.colour
+                                });
+                            }
+                        }
+                    } catch (e) {}
+                }
+                continue;
+            }
+            if (func1.isImpl || func2.isImpl) continue;
+            if (func1.isVertical && !func2.isVertical) {
+                try {
+                    const x = func1.x;
+                    const y= func2.expr.evaluate({x:x});
+                    if (isFinite(y)) {
+                        inters.push({
+                            x:x,
+                            y:y,
+                            func1Idx:func1.index,
+                            func2Idx:func2.index,
+                            colour1:func.colour,
+                            colour2:func2.colour
+                        });
+                    }
+                } catch (e) {}
+                continue;
+            }
+            if (func1.isImpl || func2.isImpl) continue;
+            if (func1.isVertical && !func2.isVertical) {
+                try {
+                    const x = func1.x;
+                    const y= func2.expr.evaluate({x:x});
+                    if (isFinite(y)) {
+                        inters.push({
+                            x:x,
+                            y:y,
+                            func1Idx:func1.index,
+                            func2Idx:func2.index,
+                            colour1:func1.colour,
+                            colour2:func2.colour
+                        });
+                    }
+                } catch (e) {}
+                continue;
+            }
+            if (func2.isVertical && !func1.isVertical) {
+                try {
+                    const x=func2.x;
+                    const y=func1.expr.evaluate({x:x});
+                    if (isFinite(y)) {
+                        inters.push({
+                            x:x,
+                            y:y,
+                            func1Idx:func1.index,
+                            func2Idx:func2.index,
+                            colour1:func1.colour,
+                            colour2:func2.colour
+                        });
+                    }
+                } catch (e) {}
+                continue;
+            }
+            if (func1.isVertical && func2.isVertical) continue;
+            const srchRange = canvas.width/scale*1.5;
+            const step = 0.1;
+            for (let x = -srchRange; x<=srchRange; x+= step) {
+                try {
+                    const y1=func1.expr.evaluate({x:x});
+                    const y2=func2.expr.evaluate({x:x});
+                    if (!isFinite(y1) || !isFinite(y2)) continue;
+                    const diff = y1-y2;
+                    const xNext = x+step;
+                    const y1Next = func1.expr.evaluate({x:xNext});
+                    const y2Next = func2.expr.evaluate({x:xNext});
+                    if (!isFinite(y1Next) || !isFinite(y2Next)) continue;
+                    const diffNext = y1Next-y2Next;
+                    if (Math.sign(diff) !== Math.sign(diffNext) && diff !== 0) {
+                        let x1 = x;
+                        let x2 = xNext;
+                        for (let iter = 0; iter < 20; iter++) {
+                            const xMid = (x1+x2)/2;
+                            const y1Mid = func1.expr.evaluate({x:xMid});
+                            const y2Mid = func2.expr.evaluate({x:xMid});
+                            const diffMid = y1Mid-y2Mid;
+                            if (Math.abs(diffMid)<0.0001) {
+                                const yInt = (y1Mid+y2Mid)/2;
+                                const isDupe = inters.some(int => 
+                                    Math.abs(int.x-xMid)<0.01 && Math.abs(int.y-yInt)<0.01 && ((int.func1Idx === func1.index && int.func2Idx === func2.index) || (int.func1Idx === func2.index && int.func2Idx === func1.index))
+                                );
+                                if (!isDupe) {
+                                    inters.push({
+                                        x:xMid,
+                                        y:yInt,
+                                        func1Idx:func1.index,
+                                        func2Idx:func2.index,
+                                        colour1:func1.colour,
+                                        colour2:func2.colour
+                                    });
+                                }
+                                break;
+                            }
+                            if (Math.sign(diffMid) === Math.sign(diff)) {
+                                x1=xMid;
+                            } else {
+                                x2=xMid;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    //skip
+                }
+            }
+        }
+    }
+}
+
+function drawInters() {
+    const centerX = canvas.width/2 + offsetX;
+    const centerY = canvas.height/2+offsetY;
+    inters.forEach(int => {
+        const px = centerX+int.x*scale;
+        const py = centerY-int.y*scale;
+        if (px < -20 || px > canvas.width + 20 || py < -20 || py > canvas.height+20) {
+            return;
+        }
+        const gradient = ctx.createRadialGradient(px,py,0,px,py,8);
+        gradient.addColorStop(0,int.colour1);
+        gradient.addColorStop(1,int.colour2);
+        ctx.fillStyle=gradient;
+        ctx.beginPath();
+        ctx.arc(px,py,8,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle='#fff';
+        ctx.beginPath();
+        ctx.arc(px,py,4,0,Math.PI*2);
+        ctx.fill();
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(px,py,6,0,Math.PI*2);
+        ctx.stroke();
+        POIs.push({
+            x:int.x,
+            y:int.y,
+            px:px,
+            py:py,
+            type:'inter',
+            colour:int.colour1,
+            funcIdx:int.func1Idx,
+            func2Idx:int.func2Idx
+        });
+    });
+}
 
 updFunctions();
