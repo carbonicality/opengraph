@@ -2139,4 +2139,280 @@ function drawInters() {
     });
 }
 
+//table of vals stuff
+const tableBtn = document.getElementById('table');
+const tablePnl = document.getElementById('table-pnl');
+const tableClose = document.getElementById('table-close');
+const tableGen = document.getElementById('table-gen');
+const tableExport = document.getElementById('table-export');
+const tableCopy = document.getElementById('table-cp');
+const tableMIX = document.getElementById('table-mix');
+const tableMAX = document.getElementById('table-max');
+const tableStep = document.getElementById('table-step');
+const tableCont = document.getElementById('table-cont');
+const valTable = document.getElementById('vals-table');
+const tHead = document.getElementById('thead');
+const tBody = document.getElementById('tbody');
+
+tableBtn.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    menuDrp.classList.remove('show');
+    colpickerPnl.classList.remove('show');
+    tablePnl.classList.toggle('show');
+    if (tablePnl.classList.contains('show')) {
+        genTable();
+    }
+});
+
+tableClose.addEventListener('click',()=>{
+    tablePnl.classList.remove('show');
+});
+
+document.addEventListener('click',(e)=>{
+    if (!tablePnl.contains(e.target) && e.target !== tableBtn) {
+        tablePnl.classList.remove('show');
+    }
+});
+
+tableGen.addEventListener('click',()=>{
+    genTable();
+});
+
+function genTable() {
+    const minX=parseFloat(tableMIX.value);
+    const maxX=parseFloat(tableMAX.value);
+    const step=parseFloat(tableStep.value);
+    if (isNaN(minX)||isNaN(maxX)||isNaN(step)||step<=0) {
+        tableCont.innerHTML = `<div class="table-empty">Please enter valid range and step values.</div>`;
+        return;
+    }
+    if (minX >=maxX) {
+        tableCont.innerHTML = `<div class="table-empty">Min X must be less than Max X.</div>`;
+        return;
+    }
+    if (functions.length === 0) {
+        tableCont.innerHTML =`<div class="table-empty">No functions to display, try adding some!</div>`;
+        return;
+    }
+    tableCont.innerHTML = '<table class="vals-table"><thead id="thead"></thead><tbody id="tbody"></tbody></table>';
+    const newTHead=document.getElementById('thead');
+    const newTBody=document.getElementById('tbody');
+    let headerHTML='<tr><th>x</th>';
+    functions.forEach(func => {
+        if (func.isImpl) {
+            headerHTML += `<th style="color:${func.colour}">f${func.index+1} (implicit)</th>`;
+        } else if (func.isVertical) {
+            headerHTML += `<th style="color:${func.colour}">f${func.index+1} (vertical)</th>`;
+        } else if (func.isPolar) {
+            headerHTML += `<th style="color:${func.colour}">f${func.index+1} (polar)</th>`;
+        } else {
+            headerHTML += `<th style="color:${func.colour}">f${func.index+1}(x)</th>`;
+        }
+    });
+    headerHTML += '</tr>';
+    newTHead.innerHTML=headerHTML;
+    let bodyHTML='';
+    const numStep=Math.min(Math.ceil((maxX-minX)/step),1000);
+    for (let i=0;i<=numStep;i++) {
+        const x=minX+(i*step);
+        bodyHTML+=`<tr><td>${x.toFixed(4)}</td>`;
+        functions.forEach(func=>{
+            let value='-';
+            try {
+                if (func.isVertical) {
+                    value='N/A';
+                } else if (func.isImpl) {
+                    let y1=-100;
+                    let y2=100;
+                    let foundY=null;
+                    try {
+                        const f1=func.leftExpr.evaluate({x:x,y:y1}) - func.rightExpr.evaluate({x:x,y:y1});
+                        const f2=func.leftExpr.evaluate({x:x,y:y2})-func.rightExpr.evaluate({x:x,y:y2});
+                        if (Math.sign(f1) !==Math.sign(f2)) {
+                            for (let iter=0;iter<30;iter++) {
+                                const yMid=(y1+y2)/2;
+                                const leftVal=func.leftExpr.evaluate({x:x,y:yMid});
+                                const rightVal=func.rightExpr.evaluate({x:x,y:yMid});
+                                const diff=leftVal-rightVal;
+                                if (Math.abs(diff)<0.0001) {
+                                    foundY=yMid;
+                                    break;
+                                }
+                                if (Math.sign(diff)===Math.sign(f1)) {
+                                    y1=yMid;
+                                } else {
+                                    y2=yMid;
+                                }
+                            }
+                        }
+                    } catch (e) {}
+                    if (foundY !== null) {
+                        value=foundY.toFixed(4);
+                    } else {
+                        value='undefined';
+                    }
+                } else if (func.isPolar) {
+                    value='N/A';
+                } else {
+                    const y= func.expr.evaluate({x:x});
+                    if (typeof y==='number' && isFinite(y)) {
+                        value=y.toFixed(4);
+                    } else {
+                        value='undefined';
+                    }
+                }
+            } catch (e) {
+                value='error';
+            }
+            bodyHTML += `<td>${value}</td>`;
+        });
+        bodyHTML+='</tr>';
+    }
+    newTBody.innerHTML = bodyHTML;
+}   
+
+tableExport.addEventListener('click',()=>{
+    const minX=parseFloat(tableMIX.value);
+    const maxX=parseFloat(tableMAX.value);
+    const step=parseFloat(tableStep.value);
+    if (functions.length===0) return;
+    let csv='x';
+    functions.forEach(func=>{
+        csv+=`,f${func.index+1}(x)`
+    });
+    csv += '\n';
+    const numSteps = Math.min(Math.ceil((maxX-minX)/step),1000);
+    for (let i=0;i<=numSteps;i++) {
+        const x = minX+(i*step);
+        csv+=x.toFixed(4);
+        functions.forEach(func => {
+            let value='';
+            try {
+                if (func.isVertical || func.isPolar) {
+                    value='N/A';
+                } else if (func.isImpl) {
+                    let y1 = -100;
+                    let y2 = 100;
+                    let foundY=null;
+                    try {
+                        const f1=func.leftExpr.evaluate({x:x,y:y1})-func.rightExpr.evaluate({x:x,y:y1});
+                        const f2=func.leftExpr.evaluate({x:x,y:y2})-func.rightExpr.evaluate({x:x,y:y2});
+                        if (Math.sign(f1) !== Math.sign(f2)) {
+                            for (let iter=0; iter<30;iter++) {
+                                const yMid=(y1+y2)/2;
+                                const leftVal=func.leftExpr.evaluate({x:x,y:yMid});
+                                const rightVal=func.rightExpr.evaluate({x:x,y:yMid});
+                                const diff=leftVal-rightVal;
+                                if (Math.abs(diff)<0.0001) {
+                                    foundY=yMid;
+                                    break;
+                                }
+                                if (Math.sign(diff)===Math.sign(f1)) {
+                                    y1=yMid;
+                                } else {
+                                    y2=yMid;
+                                }
+                            }
+                        }
+                    } catch (e) {}
+                    if (foundY !== null) {
+                        value=foundY.toFixed(4);
+                    } else {
+                        value='undefined';
+                    }
+                } else {
+                    const y = func.expr.evaluate({x:x});
+                    if(typeof y==='number' && isFinite(y)) {
+                        value=y.toFixed(4);
+                    }else{
+                        value='undefined';
+                    }
+                }
+            } catch (e) {
+                value='error';
+            }
+            csv+=','+value;
+        });
+        csv+='\n';
+    }
+    const blob=new Blob([csv],{type:'text/csv'});
+    const url=URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url;
+    a.download=`table-vals-${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
+tableCopy.addEventListener('click',()=>{
+    const minX=parseFloat(tableMIX.value);
+    const maxX=parseFloat(tableMAX.value);
+    const step=parseFloat(tableStep.value);
+    if(functions.length===0)return;
+    let text='x\t';
+    functions.forEach((func,idx)=>{
+        text+=`f${func.index+1}(x)`;
+        if (idx<functions.length-1)text+='\t';
+    });
+    text+='\n';
+    const numSteps = Math.min(Math.ceil((maxX-minX)/step),1000);
+    for (let i=0;i<=numSteps;i++) {
+        const x = minX+(i*step);
+        text+=x.toFixed(4);
+        functions.forEach(func=>{
+            let value='';
+            try {
+                if (func.isVertical || func.isPolar) {
+                    value='N/A';
+                } else if (func.isImpl) {
+                    let y1=-100;
+                    let y2=100;
+                    let foundY=null;
+                    try {
+                        const f1=func.leftExpr.evaluate({x:x,y:y1})-func.rightExpr.evaluate({x:x,y:y1});
+                        const f2=func.leftExpr.evaluate({x:x,y:y2})-func.rightExpr.evaluate({x:x,y:y2});
+                        if (Math.sign(f1) !== Math.sign(f2)) {
+                            for (let iter=0;iter<30;iter++) {
+                                const yMid = (y1+y2)/2;
+                                const leftVal = func.leftExpr.evaluate({x:x,y:yMid});
+                                const rightVal = func.rightExpr.evaluate({x:x,y:yMid});
+                                const diff = leftVal-rightVal;
+                                if (Math.abs(diff) < 0.0001) {
+                                    foundY=yMid;
+                                    break;
+                                }
+                                if (Math.sign(diff) === Math.sign(f1)) {
+                                    y1=yMid;
+                                } else {
+                                    y2=yMid;
+                                }
+                            }
+                        }
+                    } catch (e) {}
+                    if (foundY !== null) {
+                        value=foundY.toFixed(4);
+                    } else {
+                        value='undefined';
+                    }
+                }
+            } catch (e) {
+                value='error';
+            }
+            text+='\t'+value;
+        });
+        text+='\n';
+    }
+    navigator.clipboard.writeText(text).then(()=>{
+        const ogText=tableCopy.querySelector('span:not(.material-symbols-outlined)').textContent;
+        tableCopy.querySelector('span:not(.material-symbols-outlined)').textContent ='Copied!';
+        setTimeout(()=>{
+            tableCopy.querySelector('span:not(.material-symbols-outlined)').textContent = ogText;
+        },1500);
+    }).catch(err=>{
+        console.error('failed copy:(',err);
+    });
+});
+
 updFunctions();

@@ -1075,3 +1075,207 @@ div[class*="alternative"] .MLK__keycap,
     border-radius:3px;
     height:6px;
 }
+
+/*table of vals stuff*/
+.table-pnl {
+    position:absolute;
+    top:44px;
+    right:8px;
+    background:#fff;
+    border:1px solid rgba(0,0,0,0.08);
+    border-radius:6px;
+    box-shadow:0 0 0 1px rgba(0,0,0,0.02), 0 4px 6px rgba(0,0,0,0.04),0 12px 24px rgba(0,0,0,0.08); /*ts some crazy long line*/
+    display:none;
+    z-index:100;
+    animation:drpIn 0.12s cubic-bezier(0.16,1,0.3,1);
+    width: 500px;
+    max-height: 600px;
+    flex-direction: column;
+    margin-top:10px;
+}
+
+.table-pnl.show {
+    display: flex;
+}
+
+.table-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    background: linear-gradient(to bottom,#fcfcfc 0%, #ebebeb 100%);    
+}
+
+.table-tl {
+    font-size: 14px;
+    font-weight:500;
+    color: #666;
+    letter-spacing:0.3px;
+}
+
+.table-close {
+    width:24px;
+    height:24px;
+    border:none;
+    background:transparent;
+    color:#999;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content: center;
+    border-radius:3px;
+    transition: all 0.15s;
+}
+
+.table-close:hover {
+    background:rgba(0,0,0,0.05);
+    color:#666;
+}
+
+.table-ctrls {
+    padding: 12px 16px;
+    background: #f9f9f9;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    flex-direction:column;
+    gap: 8px;
+}
+
+.table-ctrl-row {
+    display:flex;
+    align-items: center;
+    gap:8px;
+}
+
+.table-ctrl-row label {
+    font-size: 12px;
+    color:#666;
+    min-width:55px;
+    font-weight:500;
+}
+
+.table-ctrl-row input {
+    flex:1;
+    padding:6px 8px;
+    border:1px solid #d0d0d0;
+    border-radius: 4px;
+    font-size:13px;
+    background: #fff;
+}
+
+.table-ctrl-row input:focus {
+    outline:none;
+    border-color:#2d70b3;
+}
+
+.table-gen-btn {
+    width:100%;
+    padding:8px;
+    border:1px solid #2d70b3;
+    background:#2d70b3;
+    color:#fff;
+    border-radius:4px;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:500;
+    transition:all 0.15s;
+    margin-top:4px;
+}
+
+.table-gen-btn:hover {
+    background:#3182ce;
+    border-color:#3182ce;
+}
+
+.table-gen-btn:active {
+    background: #225385;
+}
+
+.table-cont {
+    flex: 1;
+    overflow: auto;
+    padding: 12px 16px;
+    background:#fff;
+    min-height: 200px;
+    max-height: 400px;
+}
+
+.vals-table {
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+}
+
+.vals-table thead th {
+    background:#f5f5f5;
+    padding:8px 12px;
+    text-align:left;
+    font-weight:600;
+    color:#333;
+    border-bottom:2px solid #d0d0d0;
+    position:sticky;
+    top:0;
+    z-index:1;
+}
+
+.vals-table tbody td {
+    padding: 6px 12px;
+    border-bottom: 1px solid #e5e5e5;
+    color: #333;
+    font-weight: 'Ubuntu Mono',monospace;
+}
+
+.vals-table tbody tr:hover {
+    background:#f9f9f9;
+}
+
+.vals-table tbody td:first-child {
+    font-weight:500;
+    color:#666;
+}
+
+.table-ftr {
+    padding: 12px 16px;
+    border-top: 1px solid #e5e5e5;
+    background: #f9f9f9;
+    display: flex;
+    gap: 8px;
+}
+
+.table-export {
+    flex:1;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    background: #fff;
+    color:#666;
+    border-radius:4px;
+    cursor: pointer;
+    font-size:13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap:6px;
+    transition: all 0.15s;
+}
+
+.table-export:hover {
+    background: #f5f5f5;
+    border-color:#999;
+}
+
+.table-export:active {
+    background: #eee;
+}
+
+.table-export .material-symbols-outlined {
+    font-size: 18px;
+}
+
+.table-empty {
+    text-align:center;
+    color:#999;
+    font-size:13px;
+    padding: 40px 20px;
+    line-height:1.6;
+}

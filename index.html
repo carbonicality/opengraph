@@ -51,6 +51,10 @@
                     <span class="material-symbols-outlined">grid_off</span>
                     <span>Hide grid</span>
                 </div>
+                <div class="menu-item" id="table">
+                    <span class="material-symbols-outlined">table_chart</span>
+                    <span>Table of values</span>
+                </div>
             </div>
             <div class="colpicker-pnl" id="colpicker-pnl">
                 <div class="colpicker-tl">Select function</div>
@@ -77,6 +81,45 @@
                         <div class="colpreset" style="background-color: #7f8c8d;" data-color="#7f8c8d"></div>
                     </div>
                     <input type="color" class="custom-col-in" id="custom-col-in">
+                </div>
+            </div>
+            <div class="table-pnl" id="table-pnl">
+                <div class="table-hdr">
+                    <div class="table-tl">Table of values</div>
+                    <button class="table-close" id="table-close">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="table-ctrls">
+                    <div class="table-ctrl-row">
+                        <label>min X:</label>
+                        <input type="number" id="table-mix" value="0" step="1">
+                    </div>
+                    <div class="table-ctrl-row">
+                        <label>max X:</label>
+                        <input type="number" id="table-max" value="5" step="1">
+                    </div>
+                    <div class="table-ctrl-row">
+                        <label>step:</label>
+                        <input type="number" id="table-step" value="1" step="0.1" min="0.01">
+                    </div>
+                    <button class="table-gen-btn" id="table-gen">Generate</button>
+                </div>
+                <div class="table-cont" id="table-cont">
+                    <table class="vals-table" id="vals-table">
+                        <thead id="thead"></thead>
+                        <tbody id="tbody"></tbody>
+                    </table>
+                </div>
+                <div class="table-ftr">
+                    <button class="table-export" id="table-export">
+                        <span class="material-symbols-outlined">download</span>
+                        Export CSV
+                    </button>
+                    <button class="table-export" id="table-cp">
+                        <span class="material-symbols-outlined">content_copy</span>
+                        Copy
+                    </button>
                 </div>
             </div>
             <div class="exp" id="exp">
