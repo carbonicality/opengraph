@@ -1251,6 +1251,7 @@ function plotFuncs() {
             //no x-ints found
         }
     });
+    ctx.setLineDash([]);
     if (hovPoint) {
         drawTooltip(hovPoint);
     }
