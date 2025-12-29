@@ -800,6 +800,7 @@ function updFunctions() {
                             isPolar:true,
                             expr:compiled,
                             latex:latex,
+                            lStyle:'solid',
                             colour:getColourIdx(idx)
                         });
                         if (colourInd) colourInd.classList.remove('hidden');
@@ -819,6 +820,7 @@ function updFunctions() {
                             isPolar:true,
                             expr:compiled,
                             latex:latex,
+                            lStyle:'solid',
                             colour:getColourIdx(idx)
                         });
                         if (colourInd) colourInd.classList.remove('hidden');
@@ -878,6 +880,7 @@ function updFunctions() {
                             leftExpr:leftCpl,
                             rightExpr:rightCpl,
                             latex:latex,
+                            lStyle:'solid',
                             colour:getColourIdx(idx)
                         });
                         if (colourInd) colourInd.classList.remove('hidden');
@@ -898,6 +901,7 @@ function updFunctions() {
                     isVertical:true,
                     x:verticalX,
                     latex:latex,
+                    lStyle:'solid',
                     colour:getColourIdx(idx),
                     verticalExpr:expr
                 });
@@ -914,6 +918,7 @@ function updFunctions() {
                 index:idx,
                 expr:compiled,
                 latex:latex,
+                lStyle:'solid',
                 colour:getColourIdx(idx)
             });
             if (colourInd) colourInd.classList.remove('hidden');
@@ -942,6 +947,10 @@ function getColourIdx(idx) {
         '#34495e'
     ]
     return colours[idx % colours.length];
+}
+
+function getLstyle(idx) {
+    return 'solid';//default
 }
 
 function plotPolar(func) {
@@ -1006,8 +1015,20 @@ function plotFuncs() {
             plotPolar(func);
             return;
         }
-        ctx.strokeStyle = func.colour;
-        ctx.lineWidth = 2.5;
+        ctx.strokeStyle=func.colour;
+        const lStyle=func.lStyle || 'solid';
+        if (lStyle === 'thick') {
+            ctx.lineWidth=5;
+        } else {
+            ctx.lineWidth=2.5;
+        }
+        if (lStyle === 'dash') {
+            ctx.setLineDash([10,5]);
+        } else if (lStyle==='dot') {
+            ctx.setLineDash([2,4]);
+        } else {
+            ctx.setLineDash([]);
+        }
         if (func.isVertical) {
             let xValue = func.x;
             if (func.verticalExpr) {
@@ -1028,6 +1049,7 @@ function plotFuncs() {
                 ctx.moveTo(px,0);
                 ctx.lineTo(px,height);
                 ctx.stroke();
+                ctx.setLineDash([]);
             }
             return;
         }
@@ -1398,6 +1420,7 @@ function restoreState(stateStr) {
                             leftExpr:leftCpl,
                             rightExpr:rightCpl,
                             latex:latex,
+                            lStyle:'solid',
                             colour:getColourIdx(idx)
                         });
                         return;
@@ -1415,6 +1438,7 @@ function restoreState(stateStr) {
                     isVertical:true,
                     x:verticalX,
                     latex:latex,
+                    lStyle:'solid',
                     colour:getColourIdx(idx)
                 });
                 return;
@@ -1428,6 +1452,7 @@ function restoreState(stateStr) {
                 index:idx,
                 expr:compiled,
                 latex:latex,
+                lStyle:'solid',
                 colour:getColourIdx(idx)
             });
         } catch (e) {
@@ -1673,27 +1698,36 @@ const colpickerPnl = document.getElementById('colpicker-pnl');
 const colpickerFuncs = document.getElementById('colpicker-funcs');
 const colpickerPS = document.getElementById('colpreset-section');
 const customColInp = document.getElementById('custom-col-in');
+let selFuncIdx = null;
 
 colpickerBtn.addEventListener('click',(e)=>{
     e.stopPropagation();
     menuDrp.classList.remove('show');
     colpickerFuncs.innerHTML = '';
     const expItems = document.querySelectorAll('.exp-item');
-    expItems.forEach((item,idx)=> {
-        if (item === document.getElementById('exp').lastElementChild) return;
+    expItems.forEach((item,idx)=>{
+        if (item===document.getElementById('exp').lastElementChild) return;
         const mathField = item.querySelector('math-field');
         if (!mathField || !mathField.value) return;
-        const func = functions.find(f => f.index === idx);
+        const func = functions.find(f => f.index===idx);
         if (!func) return;
-        const funcItem = document.createElement('div');
-        funcItem.className = 'colpicker-item';
+        const funcItem=document.createElement('div');
+        funcItem.className='colpicker-item';
         funcItem.innerHTML = `
         <span class="exp-num">${idx+1}</span>
         <div class="colswatch" style="background-color:${func.colour};"></div>
         <div class="func-preview">${mathField.value}</div>`;
         funcItem.addEventListener('click',()=>{
-            selFuncIdx = idx;
+            selFuncIdx=idx;
             colpickerPS.style.display='block';
+            document.getElementById('lstyle-sec').style.display='block';
+            const currentStyle = func.lStyle || 'solid';
+            document.querySelectorAll('.lstyle-btn').forEach(btn=>{
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-style') === currentStyle) {
+                    btn.classList.add('active');
+                }
+            });
             document.querySelectorAll('.colpicker-item').forEach(i => {
                 i.style.background='';
             });
@@ -1702,42 +1736,64 @@ colpickerBtn.addEventListener('click',(e)=>{
         colpickerFuncs.appendChild(funcItem);
     });
     colpickerPnl.classList.toggle('show');
-    colpickerPS.style.display ='none';
+    colpickerPS.style.display='none';
+    document.getElementById('lstyle-sec').style.display='none';
     selFuncIdx=null;
 });
 
-document.addEventListener('click',(e)=> {
-    if (!colpickerPnl.contains(e.target) && e.target !== colpickerBtn) {
+document.addEventListener('click',(e)=>{
+    if (!colpickerPnl.contains(e.target) && e.target != colpickerBtn) {
         colpickerPnl.classList.remove('show');
     }
 });
 
 document.querySelectorAll('.colpreset').forEach(preset => {
-    preset.addEventListener('click',()=> {
-        if (selFuncIdx === null) return;
+    preset.addEventListener('click',()=>{
+        if (selFuncIdx===null) return;
         const colour = preset.getAttribute('data-color');
         applyColFunc(selFuncIdx,colour);
-        colpickerPnl.classList.remove('show')
+        colpickerPnl.classList.remove('show');
     });
 });
 
 customColInp.addEventListener('change',(e)=>{
-    if (selFuncIdx === null) return;
+    if (selFuncIdx===null) return;
     applyColFunc(selFuncIdx,e.target.value);
     colpickerPnl.classList.remove('show');
 });
 
+document.querySelectorAll('.lstyle-btn').forEach(btn => {
+    btn.addEventListener('click',()=>{
+        if (selFuncIdx === null) return;
+        const style=btn.getAttribute('data-style');
+        applyLstyle(selFuncIdx,style);
+        document.querySelectorAll('.lstyle-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+});
+
+function applyLstyle(funcIdx,style) {
+    const func = functions.find(f=>f.index===funcIdx);
+    if (func) {
+        func.lStyle=style;
+    }
+    drawGraph();
+    if (!isRes) {
+        saveState();
+    }
+}
+
 function applyColFunc(funcIndex,colour) {
     const func = functions.find(f => f.index === funcIndex);
     if (func) {
-        func.colour = colour;
+        func.colour=colour;
     }
-    const expItems = document.querySelectorAll('.exp-item');
+    const expItems=document.querySelectorAll('.exp-item');
     const targetItem = expItems[funcIndex];
     if (targetItem) {
         const colourInd = targetItem.querySelector('.colour-ind');
         if (colourInd) {
-            colourInd.style.backgroundColor = colour;
+            colourInd.style.backgroundColor=colour;
         }
     }
     drawGraph();
@@ -2413,6 +2469,49 @@ tableCopy.addEventListener('click',()=>{
     }).catch(err=>{
         console.error('failed copy:(',err);
     });
+});
+
+//clear all
+document.getElementById('clear').addEventListener('click',()=>{
+    menuDrp.classList.remove('show');
+    if (confirm('Are you SURE you want to clear all functions?')) {
+        const expContainer = document.getElementById('exp');
+        expContainer.innerHTML ='';
+        const newItem = document.createElement('div');
+        newItem.className='exp-item active';
+        newItem.innerHTML =`
+        <div class="exp-left">
+            <span class="exp-num">1</span>
+            <div class="colour-ind hidden" style="background-color:#2d70b3;"></div>
+        </div>
+        <div class="exp-content">
+            <math-field></math-field>
+        </div>
+        <button class="delete-btn">
+            <span class="material-symbols-outlined">close</span>
+        </button>`;
+        expContainer.appendChild(newItem);
+        const fadedExp = document.createElement('div');
+        fadedExp.className = 'exp-item';
+        fadedExp.innerHTML = `
+        <div class="exp-left">
+            <span class="exp-num">2</span>
+            <div class="colour-ind hidden" style="background-color:#e74c3c;"></div>
+        </div>
+        <div class="exp-content">
+            <math-field></math-field>
+        </div>
+        <button class="delete-btn">
+            <span class="material-symbols-outlined">close</span>
+        </button>`;
+        expContainer.appendChild(fadedExp);
+        sflListeners();
+        functions = [];
+        params = {};
+        updParamsPnl();
+        drawGraph();
+        saveState();
+    }
 });
 
 updFunctions();

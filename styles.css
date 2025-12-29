@@ -1279,3 +1279,69 @@ div[class*="alternative"] .MLK__keycap,
     padding: 40px 20px;
     line-height:1.6;
 }
+
+/*linestyle stuff*/
+.lstyle-sec {
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px solid rgba(0,0,0,0.06);
+}
+
+.lstyle-grid {
+    display:grid;
+    grid-template-columns: repeat(3,1fr);
+    gap:8px;
+    margin-top:8px;
+}
+
+.lstyle-btn {
+    padding:12px;
+    border:2px solid #d0d0d0;
+    background: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    gap:6px;
+}
+
+.lstyle-btn:hover {
+    border-color:#2d70b3;
+    background:#f8f9fa;
+}
+
+.lstyle-btn.active {
+    border-color:#2d70b3;
+    background:#e3f2fd;
+}
+
+.lstyle-pre {
+    width: 100%;
+    height:3px;
+    background:#333;
+}
+
+.lstyle-pre.solid {
+    background:#333;
+}
+
+.lstyle-pre.dash {
+    background:repeating-linear-gradient(to right, #333 0px,#333 8px, transparent 8px, transparent 14px);
+}
+
+.lstyle-pre.dot {
+    background:repeating-linear-gradient(to right, #333 0px, #333 3px,transparent 3px,transparent 8px);
+}
+
+.lstyle-pre.thick {
+    height: 5px;
+    background: #333;
+}
+
+.lstyle-nm {
+    font-size: 11px;
+    color:#666;
+    font-weight:500;
+}
