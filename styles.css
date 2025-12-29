@@ -135,7 +135,7 @@ body {
     flex: 1;
     display: flex;
     align-items: center;
-    padding: 8px 40px 8px 12px;
+    padding: 8px 60px 8px 12px;
     min-width: 0;
     position: relative;
 }
@@ -1344,4 +1344,32 @@ div[class*="alternative"] .MLK__keycap,
     font-size: 11px;
     color:#666;
     font-weight:500;
+}
+
+.dupe-btn {
+    width:24px;
+    height:24px;
+    border:none;
+    background:transparent;
+    color:#aaa;
+    cursor:pointer;
+    font-size:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:all 0.15s;
+    border-radius:3px;
+    position:absolute;
+    right:40px;
+    top:50%;
+    transform:translateY(-50%);
+}
+
+.dupe-btn:hover {
+    color:#2d70b3;
+    background:rgba(45,112,179,0.1);
+}
+
+.exp-item:last-child .dupe-btn {
+    display: none !important;
 }

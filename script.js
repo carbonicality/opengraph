@@ -384,6 +384,9 @@ document.getElementById('exp').addEventListener('click', (e) => {
         <div class="exp-content">
             <math-field></math-field>
         </div>
+        <button class="dupe-btn">
+            <span class="material-symbols-outlined">content_copy</span>
+        </button>
         <button class="delete-btn">
             <span class="material-symbols-outlined">close</span>
         </button>`;
@@ -436,6 +439,61 @@ document.getElementById('exp').addEventListener('click',(e) => {
     }
 });
 
+//handle duplications
+document.getElementById('exp').addEventListener('click',(e) => {
+    const dupeBtn = e.target.closest('.dupe-btn');
+    if (dupeBtn) {
+        e.stopPropagation();
+        const item = dupeBtn.closest('.exp-item');
+        const expContainer = document.getElementById('exp');
+        if (item === expContainer.lastElementChild) {
+            return;
+        }
+        const mathField = item.querySelector('math-field');
+        const latex = mathField?mathField.value:'';
+        const currentFunc=functions.find(f => f.index===Array.from(expContainer.children).indexOf(item));
+        const newItem = document.createElement('div');
+        newItem.className = 'exp-item';
+        const allItems = Array.from(expContainer.children);
+        const insertIdx = allItems.indexOf(item)+1;
+        const nextNum=insertIdx+1;
+        const colour = currentFunc ?currentFunc.colour:getColourIdx(insertIdx);
+        newItem.innerHTML = `
+        <div class="exp-left">
+            <span class="exp-num">${nextNum}</span>
+            <div class="colour-ind ${latex?'':'hidden'}" style="background-color=${colour};"></div>
+        </div>
+        <div class="exp-content">
+            <math-field></math-field>
+        </div>
+        <button class="dupe-btn" title="Duplicate">
+            <span class="material-symbols-outlined">content_copy</span>
+        </button>
+        <button class="delete-btn">
+            <span class="material-symbols-outlined">close</span>
+        </button>`;
+        if (insertIdx <allItems.length) {
+            expContainer.insertBefore(newItem,allItems[insertIdx]);
+        } else {
+            expContainer.appendChild(newItem);
+        }
+        const nMathField = newItem.querySelector('math-field');
+        if (nMathField && latex) {
+            nMathField.value=latex;
+        }
+        Array.from(expContainer.children).forEach((expItem,idx)=>{
+            expItem.querySelector('.exp-num').textContent=idx+1;
+        });
+        sflListeners();
+        updFunctions();
+        document.querySelectorAll('.exp-item').forEach(i => i.classList.remove('active'));
+        newItem.classList.add('active');
+        if (nMathField) {
+            setTimeout(()=>nMathField.focus(),0);
+        }
+    }
+})
+
 //toolbar btn handling
 document.querySelectorAll('.toolbar-btn').forEach((btn,idx)=> {
     btn.addEventListener('click',()=> {
@@ -457,6 +515,9 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx)=> {
             <div class="exp-content">
                 <math-field></math-field>
             </div>
+            <button class="dupe-btn">
+                <span class="material-symbols-outlined">content_copy</span>
+            </button>
             <button class="delete-btn">
                 <span class="material-symbols-outlined">close</span>
             </button>`;
@@ -1363,6 +1424,9 @@ function restoreState(stateStr) {
         <div class="exp-content">
             <math-field></math-field>
         </div>
+        <button class="dupe-btn">
+            <span class="material-symbols-outlined">content_copy</span>
+        </button>
         <button class="delete-btn">
             <span class="material-symbols-outlined">close</span>
         </button>`;
@@ -2488,6 +2552,9 @@ document.getElementById('clear').addEventListener('click',()=>{
         <div class="exp-content">
             <math-field></math-field>
         </div>
+        <button class="dupe-btn">
+            <span class="material-symbols-outlined">content_copy</span>
+        </button>
         <button class="delete-btn">
             <span class="material-symbols-outlined">close</span>
         </button>`;
@@ -2502,6 +2569,9 @@ document.getElementById('clear').addEventListener('click',()=>{
         <div class="exp-content">
             <math-field></math-field>
         </div>
+        <button class="dupe-btn">
+            <span class="material-symbols-outlined">content_copy</span>
+        </button>
         <button class="delete-btn">
             <span class="material-symbols-outlined">close</span>
         </button>`;
