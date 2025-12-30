@@ -59,6 +59,10 @@
                     <span class="material-symbols-outlined">delete_sweep</span>
                     <span>Clear all functions</span>
                 </div>
+                <div class="menu-item" id="history">
+                    <span class="material-symbols-outlined">history</span>
+                    <span>Recent functions</span>
+                </div>
             </div>
             <div class="colpicker-pnl" id="colpicker-pnl">
                 <div class="colpicker-tl">Select function</div>
@@ -144,6 +148,23 @@
                     <button class="table-export" id="table-cp">
                         <span class="material-symbols-outlined">content_copy</span>
                         Copy
+                    </button>
+                </div>
+            </div>
+            <div class="history-pnl" id="history-pnl">
+                <div class="table-hdr">
+                    <div class="table-tl">Recent functions</div>
+                    <button class="table-close" id="hist-close">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="table-cont" id="hist-cont" style="max-height:500px;">
+                    <div class="hist-ls" id="hist-ls"></div>
+                </div>
+                <div class="table-ftr">
+                    <button class="table-export" id="hist-clear">
+                        <span class="material-symbols-outlined">delete_sweep</span>
+                        Clear history
                     </button>
                 </div>
             </div>

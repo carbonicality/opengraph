@@ -1373,3 +1373,88 @@ div[class*="alternative"] .MLK__keycap,
 .exp-item:last-child .dupe-btn {
     display: none !important;
 }
+
+/* history stuff*/
+.history-pnl {
+    position:absolute;
+    top:44px;
+    right:8px;
+    background:#fff;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius:6px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.02), 0 4px 6px rgba(0,0,0,0.04), 0 12px 24px rgba(0,0,0,0.08);
+    display:none;
+    z-index:100%;
+    animation:drpIn 0.12s cubic-bezier(0.16,1,0.3,1);
+    width:400px;
+    max-height:600px;
+    flex-direction: column;
+    margin-top:10px;
+}
+
+.history-pnl.show {
+    display: flex;
+}
+
+.hist-ls {
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    padding:12px;
+}
+
+.hist-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding:12px;
+    background:#f9f9f9;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    cursor:pointer;
+    transition: all 0.15s;
+}
+
+.hist-item:hover {
+    background:#f0f0f0;
+    border-color:#2d70b3;
+    transform:translateX(4px);
+}
+
+.hist-item:active {
+    background:#e8e8e8;
+}
+
+.hist-colour {
+    width: 24px;
+    height:24px;
+    border-radius: 4px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.1),0 2px 4px rgba(0,0,0,0.1);
+    flex-shrink:0;
+}
+
+.hist-latex {
+    flex: 1;
+    font-family:'mathjax-newcm',serif;
+    font-size: 16px;
+    font-style:italic;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hist-time {
+    font-size: 11px;
+    color:#999;
+    flex-shrink:0;
+}
+
+.hist-empty {
+    text-align:center;
+    color:#999;
+    font-size: 13px;
+    padding: 40px 20px;
+    line-height:1.6;
+}

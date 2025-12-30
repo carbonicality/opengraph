@@ -7,7 +7,6 @@ let offsetY = 0;
 let functions = [];
 let history = [];
 let histIdx = -1;
-const MAX_HIST = 50;
 let isRes = false;
 let POIs = [];
 let hovPoint = null;
@@ -17,6 +16,8 @@ let params = {};
 let paramListeners =[];
 let showGrid = true;
 let inters=[];
+let funcHistory=[];
+const MAX_HIST=10;
 
 function resizeCanvas() {
     canvas.width = canvas.offsetWidth;
@@ -42,6 +43,8 @@ function sflListeners() {
         mf.addEventListener('focus',handleMFF);
         mf.removeEventListener('input',updFunctions);
         mf.addEventListener('input',updFunctions);
+        mf.removeEventListener('blur',handleBlur);
+        mf.addEventListener('blur',handleBlur);
         mf.addEventListener('keydown',(e) => {
             if (e.key==='Enter') {
                 e.preventDefault();
@@ -49,6 +52,21 @@ function sflListeners() {
             }
         });
     });
+}
+
+function handleBlur(e) {
+    const item=e.target.closest('.exp-item');
+    const expContainer=document.getElementById('exp');
+    if (item === expContainer.lastElementChild)return;
+    const mathField=e.target;
+    const latex=mathField.value;
+    if (latex && latex.trim() !== '') {
+        const itemIdx = Array.from(expContainer.children).indexOf(item);
+        const func = functions.find(f => f.index === itemIdx);
+        if (func && func.latex && func.colour) {
+            saveHist(func.latex,func.colour);
+        }
+    }
 }
 
 function handleCommit() {
@@ -2582,6 +2600,96 @@ document.getElementById('clear').addEventListener('click',()=>{
         updParamsPnl();
         drawGraph();
         saveState();
+    }
+});
+
+try {
+    const savedHist = localStorage.getItem('funcHistory');
+    if (savedHist) {
+        funcHistory=JSON.parse(savedHist);
+    }
+} catch (e) {
+    console.log('couldnt read history');
+}
+
+function saveHist(latex,colour) {
+    if (!latex || latex.trim() === '') return;
+    funcHistory=funcHistory.filter(item => item.latex !== latex);
+    funcHistory.unshift({
+        latex:latex,
+        colour:colour,
+        timestamp:Date.now()
+    });
+    if (funcHistory.length>MAX_HIST) {
+        funcHistory=funcHistory.slice(0,MAX_HIST)
+    }
+    try {
+        localStorage.setItem('funcHistory',JSON.stringify(funcHistory));
+    } catch (e) {
+        console.log('couldnt save history');
+    }
+}
+
+function formatTime(timestamp) {
+    const seconds=Math.floor((Date.now()-timestamp)/1000);
+    if (seconds >60)return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds/60)}m ago`;
+    if (seconds < 86400)return `${Math.floor(seconds/3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds/86400)}d ago`;
+    return `${Math.floor(seconds/604800)}w ago`;
+}
+
+function renderHist() {
+    const histList = document.getElementById('hist-ls');
+    if (funcHistory.length === 0) {
+        histList.innerHTML='<div class="hist-empty">No recent functions yet.</div>';
+        return;
+    }
+    histList.innerHTML = '';
+    funcHistory.forEach((item,idx)=>{
+        const histItem = document.createElement('div');
+        histItem.className='hist-item';
+        histItem.innerHTML=`
+        <div class="hist-colour" style="background-color:${item.colour}"></div>
+        <div class="hist-latex">${item.latex}</div>
+        <div class="hist-time">${formatTime(item.timestamp)}</div>`;
+        histList.appendChild(histItem);
+    });
+}
+
+const histBtn = document.getElementById('history');
+const histPnl = document.getElementById('history-pnl');
+const histClose = document.getElementById('hist-close');
+const histClear = document.getElementById('hist-clear');
+
+histBtn.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    menuDrp.classList.remove('show');
+    colpickerPnl.classList.remove('show');
+    tablePnl.classList.remove('show');
+    histPnl.classList.toggle('show');
+    if (histPnl.classList.contains('show')) {
+        renderHist();
+    }
+});
+
+histClose.addEventListener('click',() => {
+    histPnl.classList.remove('show');
+});
+
+histClear.addEventListener('click', ()=>{
+    if (confirm('Are you SURE you want to clear all function history?')) {
+        funcHistory=[];
+        try {
+            localStorage.removeItem('funcHistory');
+        } catch (e) {}
+        renderHist();
+    }
+});
+
+document.addEventListener('click',(e)=>{
+    if (!histPnl.contains(e.target) && e.target !== histBtn) {
+        histPnl.classList.remove('show');
     }
 });
 
