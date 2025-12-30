@@ -24,6 +24,7 @@ it utilises mathlive and has loads of cool features, like function plotting, bas
 - cool ui!
 
 ## usage
+the website is at: https://carbonicality.github.io/opengraph/
 open the website, and put your equations in the left hand sidebar!
 press the keyboard button to open the virtual keyboard
 use the + button or the faded box to add new equations
