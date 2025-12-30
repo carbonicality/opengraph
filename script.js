@@ -18,6 +18,7 @@ let showGrid = true;
 let inters=[];
 let funcHistory=[];
 const MAX_HIST=10;
+let showLabels=false;
 
 function resizeCanvas() {
     canvas.width = canvas.offsetWidth;
@@ -558,8 +559,17 @@ document.querySelectorAll('.toolbar-btn').forEach((btn,idx)=> {
                 drawGraph();
             }
         } else if (idx === 4) {
-            undo();
+            showLabels = !showLabels;
+            const labelsBtn=document.getElementById('labels-btn');
+            if (showLabels) {
+                labelsBtn.style.background='rgba(45,112,179,0.2)';
+            } else {
+                labelsBtn.style.background='transparent';
+            }
+            drawGraph();
         } else if (idx === 5) {
+            undo();
+        } else if (idx === 6) {
             redo();
         }
     });
@@ -1336,6 +1346,75 @@ function plotFuncs() {
     }
 }
 
+function drawFuncLbs() {
+    if (!showLabels) return;
+    const width=canvas.width;
+    const height=canvas.height;
+    const centerX=width/2+offsetX;
+    const centerY=height/2+offsetY;
+    ctx.font='bold 14px Ubuntu';
+    ctx.textAlign='left';
+    ctx.textBaseline='middle';
+    functions.forEach(func =>{
+        if (func.isVertical) {
+            const px =centerX+func.x*scale;
+            if (px >= 0 && px <= width) {
+                const labelX=px+8;
+                const labelY = 30;
+                const label = `f${func.index+1}`;
+                const metrics = ctx.measureText(label);
+                const padding = 4;
+                ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                ctx.fillRect(labelX-padding,labelY-10,metrics.width+padding*2,20);
+                ctx.fillStyle=func.colour;
+                ctx.fillText(label,labelX,labelY);
+            }
+            return;
+        }
+        if (func.isImpl || func.isPolar) {
+            const labelX = centerX+50;
+            const labelY = centerY-50-(func.index*25);
+            const label = `f${func.index+1}`;
+            const metrics = ctx.measureText(label);
+            const padding =4;
+            ctx.fillStyle='rgba(255,255,255,0.9)';
+            ctx.fillRect(labelX-padding,labelY-10,metrics.width+padding*2,20);
+            ctx.fillStyle=func.colour;
+            ctx.fillText(label,labelX,labelY);
+            return;
+        }
+        let labelX = width*0.7;
+        let labelY = centerY;
+        try {
+            const x = (labelX-centerX)/scale;
+            const y = func.expr.evaluate({x:x});
+            if (typeof y==='number' && isFinite(y)) {
+                labelY=centerY-(y*scale);
+                if (labelY<20) labelY=20;
+                if (labelY > height - 20) labelY = height-20;
+            }
+        } catch (e) {
+            try {
+                const x=0;
+                const y = func.expr.evaluate({x:x});
+                if (typeof y === 'number' && isFinite(y)) {
+                    labelX=centerX+50;
+                    labelY=centerY-(y*scale);
+                }
+            } catch (e2) {
+                labelY=30+(func.index*25);
+            }
+        }
+        const label=`f${func.index+1}`;
+        const metrics = ctx.measureText(label);
+        const padding =4;
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fillRect(labelX-padding,labelY-10,metrics.width+padding*2,20);
+        ctx.fillStyle = func.colour;
+        ctx.fillText(label,labelX,labelY);
+    });
+}
+
 const ogDrawGraph = drawGraph;
 drawGraph = function() {
     ogDrawGraph();
@@ -1346,6 +1425,7 @@ drawGraph = function() {
     if (traceMode && tracePoint) {
         drawTrace();
     }
+    drawFuncLbs();
 };
 
 //handle custom kb toggle button too
